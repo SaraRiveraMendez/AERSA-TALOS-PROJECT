@@ -1,62 +1,72 @@
 using Microsoft.EntityFrameworkCore;
-using TalosAPI.Data;
+using TalosAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Swagger 
+// 🔥 Conexión a MySQL
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<TalosTecmtyContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// 🔥 Swagger (opcional pero útil)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Conexión a MySQL
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// 🔥 Evitar errores de ciclos
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 var app = builder.Build();
 
-// Swagger
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-// Endpoint de prueba original
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild",
-    "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
-app.MapGet("/weatherforecast", () =>
+// ENDPOINT PRODUCTOS (YA FUNCIONAL)
+app.MapGet("/productos", async (TalosTecmtyContext db) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast(
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        )
-    ).ToArray();
-
-    return forecast;
+    return await db.Productos
+        .Select(p => new
+        {
+            p.Idproducto,
+            p.ProductoNombre,
+            p.ProductoPrecio,
+            p.ProductoCosto
+        })
+        .Take(10)
+        .ToListAsync();
 });
 
-// NUEVO endpoint de prueba DB
-app.MapGet("/test-db", async (AppDbContext db) =>
+
+// PRODUCTO POR ID
+app.MapGet("/productos/{id}", async (int id, TalosTecmtyContext db) =>
+{
+    var producto = await db.Productos
+        .Where(p => p.Idproducto == id)
+        .Select(p => new
+        {
+            p.Idproducto,
+            p.ProductoNombre,
+            p.ProductoPrecio,
+            p.ProductoDescripcion
+        })
+        .FirstOrDefaultAsync();
+
+    return producto is not null ? Results.Ok(producto) : Results.NotFound();
+});
+
+
+// TEST DB
+app.MapGet("/test-db", async (TalosTecmtyContext db) =>
 {
     return await db.Database.CanConnectAsync();
 });
 
-// endpoint simple
-app.MapGet("/", () => "API funcionando ");
-
 app.Run();
-
-// record (déjalo abajo)
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TalosAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb65c71aace5b515b0b8d979eae762b150856e1b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+370a8c47016912b45ec474e09b0bebaee106e39c")]
 [assembly: System.Reflection.AssemblyProductAttribute("TalosAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TalosAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

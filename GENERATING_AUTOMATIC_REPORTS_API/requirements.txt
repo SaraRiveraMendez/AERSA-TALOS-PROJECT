@@ -1,0 +1,32 @@
+# API
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-dotenv==1.0.1
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# Base de datos (MySQL ahora, Oracle después)
+sqlalchemy==2.0.35
+aiomysql==0.2.0          # Driver async para MySQL
+# oracledb==2.4.1         # Descomentar al migrar a Oracle Autonomous DB
+
+# Procesamiento de datos
+pandas==2.2.3
+numpy==2.1.2
+
+# Generación de gráficas
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Generación de PDF
+jinja2==3.1.4
+weasyprint==62.3
+
+# Scheduler
+apscheduler==3.10.4
+
+# HTTP client (para webhooks y notificaciones)
+httpx==0.27.2
+
+# Utilidades
+python-multipart==0.0.12

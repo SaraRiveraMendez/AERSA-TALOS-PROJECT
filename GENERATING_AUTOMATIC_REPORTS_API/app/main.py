@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app.config import get_settings
+from GENERATING_AUTOMATIC_REPORTS_API.app.config import get_settings
 from app.db.connection import check_db_connection, dispose_engine
 from app.models import HealthResponse
 from app.routers import reports

@@ -24,7 +24,7 @@ from app.db.queries import (
 )
 from app.models import GenerateReportRequest, ReportStatusResponse
 from app.services.data_processor import DataProcessor
-from app.config import get_settings
+from GENERATING_AUTOMATIC_REPORTS_API.app.config import get_settings
 
 router = APIRouter(prefix="/reports", tags=["Reportes"])
 settings = get_settings()

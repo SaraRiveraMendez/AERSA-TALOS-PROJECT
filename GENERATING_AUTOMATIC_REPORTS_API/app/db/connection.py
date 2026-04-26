@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy import text, event
 
-from app.config import get_settings
+from GENERATING_AUTOMATIC_REPORTS_API.app.config import get_settings
 
 settings = get_settings()
 

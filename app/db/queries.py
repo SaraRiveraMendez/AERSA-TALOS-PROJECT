@@ -76,7 +76,8 @@ QUERY_DETALLE = text(
         p.producto_nombre,
         p.producto_baja,
         p.producto_rendimiento,
-        p.producto_visible,
+        p.producto_oculto,
+        p.producto_tipo,
 
         c.categoria_nombre,
         c.idcategoria,
@@ -86,9 +87,7 @@ QUERY_DETALLE = text(
 
         imd.inventariomesdetalle_stockinicial,
         imd.inventariomesdetalle_stockteorico,
-        imd.inventariomesdetalle_explosion,
         imd.inventariomesdetalle_stockfisico,
-        imd.inventariomesdetalle_totalfisico,
         imd.inventariomesdetalle_diferencia,
 
         imd.inventariomesdetalle_ingresocompra,

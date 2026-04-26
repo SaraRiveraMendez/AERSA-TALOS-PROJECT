@@ -3,4 +3,5 @@ talos_tecmty.db
 talos_tecmty.sql
 .env
 .venv/
+storage/
 

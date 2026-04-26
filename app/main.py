@@ -11,6 +11,8 @@ Incluye:
 
 from contextlib import asynccontextmanager
 from datetime import datetime, date, timedelta
+import asyncio
+import sys
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,11 +24,16 @@ from app.db.connection import check_db_connection, dispose_engine
 from app.models import HealthResponse
 from app.routers import reports
 
+
 settings = get_settings()
 
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 
 scheduler = AsyncIOScheduler(timezone=settings.scheduler_timezone)
+
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 async def _scheduled_weekly_reports() -> None:

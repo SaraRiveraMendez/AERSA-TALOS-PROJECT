@@ -15,7 +15,7 @@ Columnas confirmadas vía SHOW COLUMNS / SELECT real:
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from GENERATING_AUTOMATIC_REPORTS_API.app.config import get_settings
+from app.config import get_settings
 
 settings = get_settings()
 

@@ -109,9 +109,11 @@ SELECT
 
 FROM inventariomesdetalle
 WHERE idinventariomes IN (
-    SELECT idinventariomes
-    FROM inventariomes
-    WHERE inventariomes_estatus IN ('finalizado', 'aplicado', 'terminado')
+    SELECT im.idinventariomes
+    FROM inventariomes im
+    JOIN almacen a ON a.idalmacen = im.idalmacen
+    WHERE im.inventariomes_estatus IN ('finalizado', 'aplicado', 'terminado')
+      AND a.almacen_estatus = 1
 );
 
 CREATE OR REPLACE VIEW vw_categoria_limpia AS

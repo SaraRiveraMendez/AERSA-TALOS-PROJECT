@@ -8,7 +8,7 @@
 
 TALOS es una plataforma SaaS de gestión de inventarios, compras y ventas para grupos restauranteros. Cada empresa cliente tiene su propio catálogo de productos, sucursales y almacenes dentro del sistema. La base `talos_tecmty` contiene datos reales de 822 empresas y 457 sucursales clientes de la plataforma.
 
-Este documento forma parte del proceso de construcción del copiloto. Antes de poder usar los datos para cualquier análisis (diferencias de inventario, costo potencial, variación de compras) fue necesario entender qué columnas y registros eran confiables y cuáles no. Aquí se documenta la lógica detrás de cada decisión de limpieza, los queries de diagnóstico que se corrieron, y cómo usar las vistas resultantes.
+Este documento forma parte del proceso de construcción del copiloto. Antes de poder usar los datos para cualquier análisis fue necesario entender qué columnas y registros eran confiables y cuáles no. Aquí se documenta la lógica detrás de cada decisión de limpieza, los queries de diagnóstico que se corrieron, y cómo usar las vistas resultantes.
 
 ---
 
@@ -24,7 +24,7 @@ Este documento forma parte del proceso de construcción del copiloto. Antes de p
 | `productotalos` | Catálogo homologado de productos entre empresas |
 | `unidadmedida` | Catálogo de unidades de medida |
 
-> **Nota:** Las tablas `requisicion` y `requisiciondetalle` (compras/traspasos) pertenecen a una base de datos histórica separada, no incluida en `talos_tecmty`.
+> **Nota:** Hay tablas disponibles en el diccionario proporcionado por la empresa, como `requisicion` y `requisiciondetalle` (compras/traspasos), que noe están incluidas en `talos_tecmty`.
 
 ---
 
@@ -76,11 +76,9 @@ total_filas | nulos_descripcion | nulos_comentarioreceta | nulos_image_path | nu
 - `producto_descripcion`: 100% nula → eliminar
 - `image_path`: 99.8% nula → eliminar
 - `created_at`: 90% nula → eliminar
-- `idimpuesto`: ~100% nula + el proveedor confirmó que está "en maduración" → eliminar
+- `idimpuesto`: ~100% nula + "sin uso actual" → eliminar
 - `producto_comentarioreceta`: 96.7% nula → eliminar
 - 19,264 productos dados de baja y 6,037 ocultos → filtrar del análisis
-
-> **Nota importante:** El diccionario decía que la columna se llamaba `producto_comentario`, pero en la base real se llama `producto_comentarioreceta`. Asi que es mejor verificar con `SHOW COLUMNS` antes de escribir queries.
 
 ---
 
@@ -123,7 +121,46 @@ aplicado              | 4976
 terminado             | 293
 ```
 
-**Hallazgo:** Los 363 inventarios en `editando` van de 2021 a 2026. Es decir, son registros abandonados a medias en distintos años, no inventarios activos, así que se excluyen del análisis.
+```sql
+SELECT
+    inventariomes_estatus,
+    MIN(inventariomes_fecha) AS fecha_mas_antigua,
+    MAX(inventariomes_fecha) AS fecha_mas_reciente,
+    COUNT(*) AS cantidad
+FROM inventariomes
+WHERE inventariomes_estatus = 'editando'
+GROUP BY inventariomes_estatus;
+```
+
+**Resultado:**
+```
+inventariomes_estatus | fecha_mas_antigua    | fecha_mas_reciente  | cantidad
+editando              |  2021-06-30 00:00:00 | 2026-04-30 00:00:00 | 363
+```
+
+```sql
+SELECT
+    YEAR(inventariomes_fecha) AS año,
+    COUNT(*) AS cantidad
+FROM inventariomes
+WHERE inventariomes_estatus = 'editando'
+GROUP BY YEAR(inventariomes_fecha)
+ORDER BY año;
+```
+
+**Resultado:**
+```
+año   | cantidad
+2021  |  4
+2022  |  42
+2023  |  82
+2024  |  80
+2025  |  42
+2026  |  113
+```
+
+**Hallazgo:** Los 363 inventarios en `editando` están distribuidos entre 2021 y 2026 (4, 42, 82, 80, 42 y 113 por año respectivamente), lo que indica que son registros abandonados a medias en distintos años, no inventarios activos en proceso, así que se excluyen del análisis.
+
 
 ---
 
@@ -184,7 +221,8 @@ negativos_extremos | todos_negativos | en_cero | mayores_10k | mayores_100k
 7791               | 1535714         | 3360775 | 3521        | 53
 ```
 
-**Hallazgo:** 28% de registros en cero (normal: productos sin movimientos), 13% negativos (posibles errores acumulados), 3,521 con valores mayores a 10,000 (datos corruptos), 53 con valores mayores a 100,000 (errores graves).
+**Hallazgo:** 
+3,360,775 registros tienen stock teórico en cero; 1,535,714 tienen stock teórico negativo, de los cuales 7,791 son menores a -1,000; 3,521 registros superan 10,000 unidades y 53 superan 100,000.
 
 ---
 
@@ -213,8 +251,7 @@ idinventariomes | idproducto | stockteorico      | stockfisico | diferencia
 ...
 ```
 
-**Hallazgo crítico:** `idproducto = 104460` aparece 11 veces con stocks de millones, lo que parece ser un error sistémico acumulado en lugar de un error puntual.
-
+**Hallazgo crítico:** `idproducto = 104460` aparece en múltiples inventarios con stocks de millones. En los negativos se ven valores como -937,487 y -640,314 con decimales, lo que sugiere acumulación de movimientos a lo largo del tiempo.
 ---
 
 ### 9. Top 10 valores más extremos (negativos)
@@ -259,16 +296,15 @@ ORDER BY veces DESC, stock_max DESC;
 **Resultado (29 productos):**
 ```
 idproducto | veces | stock_max         | inventarios_afectados
-215125     | 1     | 999999999.999999  | 113386
-171369     | 1     | 999999986.999999  | 62056
-288406     | 1     | 116999903.000000  | 118322
-104460     | 11    | 11999992.000000   | 99990,104056,104129,105351,...
-110565     | 8     | 260280.000000     | ...
+104460     | 11    | 11999992.000000   | 99990,104056,104129,105351,106944,108475,108499,111777,114612,114952,116146 
+110565     | 8     | 260280.000000     | 44171,70506,71459,72380,74225,75313,76406,77612
+66303      | 5     | 1168000.000000    | 30026,33828,54512,54583,54603
+286359     | 2     | 250170.000000     | 94682,96144
+66295      | 2     | 125000.000000     | 19892,22459
 ...
 ```
 
-**Hallazgo:** 29 productos con stock mayor a 100,000 unidades, lo cual parece estar fuera de rango para cualquier restaurante. `idproducto = 104460` es el más preocupante ya que aparece en 11 inventarios distintos con stocks de millones, lo que indica un error acumulado en su historial de movimientos, no un error puntual. Estos registros quedan marcados con `flag_outlier = 1` en la vista.
-
+**Hallazgo:** 29 productos con stock mayor a 100,000 unidades, lo cual parece estar fuera de rango para cualquier restaurante. `idproducto = 104460` es el más preocupante ya que aparece en 11 inventarios distintos con stocks de millones, lo que indica un error acumulado en su historial de movimientos, no un error puntual.
 ---
 
 ### 11. Impacto de los filtros de limpieza
@@ -299,13 +335,13 @@ AND imd.inventariomesdetalle_stockteorico BETWEEN -10000 AND 10000;
 Las vistas leen siempre los datos más recientes de las tablas originales. Si se actualiza la base, las vistas se actualizan automáticamente.
 
 ### Por qué marcar outliers con flags en lugar de filtrarlos
-Los registros con `flag_outlier = 1` son datos corruptos, pero podrían ser útiles para auditorías o investigaciones internas. Al marcarlos en lugar de eliminarlos, quien consuma las vistas decide en cada query si los incluye o no, sin perder información para siempre.
+Los registros con `flag_outlier = 1` son datos corruptos, pero podrían ser útiles para otros fines. Al marcarlos en lugar de eliminarlos, quien consuma las vistas decide en cada query si los incluye o no, sin perder información para siempre.
 
 ### Por qué `IFNULL(..., 0)` en lugar de filtrar nulos
 Los 151 nulos en `stockfisico` y 19 en `diferencia` son una fracción insignificante de 11M de registros. Reemplazarlos con 0 es más seguro que eliminar filas que podrían tener otros campos válidos.
 
 ### Por qué excluir `editando`
-Los 363 inventarios en `editando` van desde 2021. Eesto indica que son registros que quedaron incompletos y nunca se finalizaron. Incluirlos puede contaminar los análisis de diferencias de inventario con datos a medias.
+Los 363 inventarios en `editando` van desde 2021. Esto indica que son registros que quedaron incompletos y nunca se finalizaron. Incluirlos puede contaminar los análisis de diferencias de inventario con datos a medias.
 
 ---
 
@@ -326,7 +362,7 @@ stock_teorico =
   + reajuste
 ```
 
-Si `flag_stockteorico_no_cuadra = 1`, significa que el valor guardado en la BD no coincide con lo que dan los movimientos — señal de algún error en el registro de movimientos.
+Si `flag_stockteorico_no_cuadra = 1`, significa que el valor guardado en la BD no coincide con lo que dan los movimientos, lo que puede ser una señal de algún error en el registro de movimientos.
 
 ---
 
@@ -384,7 +420,7 @@ WHERE flag_stockteorico_no_cuadra = 1;
 ---
 
 ### `vw_categoria_limpia`
-Catálogo de categorías y subcategorías. No requería filtros porque estaba limpia de origen.
+Catálogo de categorías y subcategorías. No requería filtros porque ya estaba limpia.
 
 **Uso:**
 ```sql

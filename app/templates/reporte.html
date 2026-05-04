@@ -528,6 +528,110 @@
 </div>
 
 
+
+<!-- ═══════════════════════════════════════════════════════════
+     VII-B. ANÁLISIS DE TRANSFERENCIAS
+═══════════════════════════════════════════════════════════ -->
+{% if count_transferencias > 0 %}
+<div class="section no-break">
+  <div class="section-title">VII-B. Faltantes Ajustados por Transferencias</div>
+
+  <p style="font-size:10px; line-height:1.7; color:#374151; margin-bottom:12px;">
+    Se identificaron <strong>{{ count_transferencias }}</strong> transferencia(s) confirmada(s)
+    entre almacenes por un importe total de <strong>${{ importe_transferencias }}</strong>.
+    Estos movimientos explican parte de los faltantes reportados inicialmente.
+  </p>
+
+  <!-- Resumen de ajuste -->
+  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom:16px;">
+    <div class="kpi-card danger">
+      <div class="kpi-label">Faltante bruto</div>
+      <div class="kpi-value danger">${{ faltante_bruto }}</div>
+      <div class="kpi-sub">Antes de ajuste</div>
+    </div>
+    <div class="kpi-card warning">
+      <div class="kpi-label">Transferencias confirmadas</div>
+      <div class="kpi-value warning">${{ importe_transferencias }}</div>
+      <div class="kpi-sub">{{ pct_faltante_explicado }}% del faltante explicado</div>
+    </div>
+    <div class="kpi-card {% if perdida_real|float > 0 %}danger{% else %}success{% endif %}">
+      <div class="kpi-label">Pérdida real estimada</div>
+      <div class="kpi-value {% if perdida_real|float > 0 %}danger{% else %}success{% endif %}">
+        ${{ perdida_real }}
+      </div>
+      <div class="kpi-sub">Faltante sin explicación</div>
+    </div>
+  </div>
+
+  <!-- Transferencias internas -->
+  {% if transferencias_internas %}
+  <div class="section-subtitle">🔄 Transferencias internas (mismo almacén → otro almacén)</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Origen</th>
+        <th>Destino</th>
+        <th class="text-right">Cantidad</th>
+        <th class="text-right">Importe</th>
+        <th>Origen detección</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transferencias_internas %}
+      <tr>
+        <td>{{ t.producto_nombre }}</td>
+        <td>{{ t.categoria_nombre }}</td>
+        <td>{{ t.almacen_origen_nombre }}</td>
+        <td>{{ t.almacen_destino_nombre }}</td>
+        <td class="text-right">{{ t.transferencia_cantidad }}</td>
+        <td class="text-right pos">${{ t.transferencia_importe }}</td>
+        <td>
+          {% if t.transferencia_origen == 'detectada' %}
+            <span style="color:#D97706; font-size:9px;">⚡ Detectada automáticamente</span>
+          {% else %}
+            <span style="color:#16A34A; font-size:9px;">✓ Registrada manualmente</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Transferencias entre sucursales -->
+  {% if transferencias_entre_suc %}
+  <div class="section-subtitle">🏢 Transferencias entre sucursales</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Sucursal origen</th>
+        <th>Sucursal destino</th>
+        <th class="text-right">Cantidad</th>
+        <th class="text-right">Importe</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transferencias_entre_suc %}
+      <tr>
+        <td>{{ t.producto_nombre }}</td>
+        <td>{{ t.categoria_nombre }}</td>
+        <td>{{ t.almacen_origen_nombre }}</td>
+        <td>{{ t.almacen_destino_nombre }}</td>
+        <td class="text-right">{{ t.transferencia_cantidad }}</td>
+        <td class="text-right pos">${{ t.transferencia_importe }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+</div>
+{% endif %}
+
 <!-- ═══════════════════════════════════════════════════════════
      VII. CONCLUSIONES
 ═══════════════════════════════════════════════════════════ -->

@@ -210,3 +210,91 @@ async def rechazar_transferencia(
         },
     )
     return result.rowcount > 0
+
+
+# ── Transferencias confirmadas para el reporte ────────────────────────────────
+
+QUERY_TRANSFERENCIAS_REPORTE = text("""
+    SELECT
+        t.idtransferencia,
+        t.idalmacen_origen,
+        t.idalmacen_destino,
+        t.idproducto,
+        t.transferencia_cantidad,
+        t.transferencia_costopromedio,
+        t.transferencia_importe,
+        t.transferencia_tipo,
+        t.transferencia_origen,
+        t.transferencia_observaciones,
+        p.producto_nombre,
+        c.categoria_nombre,
+        ao.almacen_nombre   AS almacen_origen_nombre,
+        ad.almacen_nombre   AS almacen_destino_nombre
+    FROM transferencia t
+    JOIN producto   p  ON p.idproducto  = t.idproducto
+    JOIN categoria  c  ON c.idcategoria = p.idcategoria
+    JOIN almacen    ao ON ao.idalmacen  = t.idalmacen_origen
+    JOIN almacen    ad ON ad.idalmacen  = t.idalmacen_destino
+    WHERE t.transferencia_estatus = 'confirmada'
+      AND (
+          t.idinventariomes_origen  = :idinventariomes
+          OR t.idinventariomes_destino = :idinventariomes
+      )
+    ORDER BY t.transferencia_importe DESC
+""")
+
+
+async def fetch_transferencias_reporte(
+    db: AsyncSession,
+    idinventariomes: int,
+) -> list[dict]:
+    """Transferencias confirmadas asociadas a un inventario. Para el reporte."""
+    result = await db.execute(
+        QUERY_TRANSFERENCIAS_REPORTE, {"idinventariomes": idinventariomes}
+    )
+    return [dict(r) for r in result.mappings().all()]
+
+
+# ── Transferencias confirmadas por inventario (para el reporte) ───────────────
+
+QUERY_CONFIRMADAS_POR_INVENTARIO = text("""
+    SELECT
+        t.idtransferencia,
+        t.idalmacen_origen,
+        t.idalmacen_destino,
+        ao.almacen_nombre           AS almacen_origen_nombre,
+        ad.almacen_nombre           AS almacen_destino_nombre,
+        t.idsucursal_origen,
+        t.idsucursal_destino,
+        t.idproducto,
+        p.producto_nombre,
+        c.categoria_nombre,
+        t.transferencia_cantidad,
+        t.transferencia_costopromedio,
+        t.transferencia_importe,
+        t.transferencia_tipo,
+        t.transferencia_origen,
+        t.transferencia_observaciones
+    FROM transferencia t
+    LEFT JOIN almacen  ao ON ao.idalmacen  = t.idalmacen_origen
+    LEFT JOIN almacen  ad ON ad.idalmacen  = t.idalmacen_destino
+    LEFT JOIN producto p  ON p.idproducto  = t.idproducto
+    LEFT JOIN categoria c ON c.idcategoria = p.idcategoria
+    WHERE t.transferencia_estatus = 'confirmada'
+      AND (
+          t.idinventariomes_origen  = :idinventariomes
+          OR t.idinventariomes_destino = :idinventariomes
+      )
+    ORDER BY t.transferencia_importe DESC
+""")
+
+
+async def fetch_transferencias_confirmadas(
+    db: AsyncSession,
+    idinventariomes: int,
+) -> list[dict]:
+    """Transferencias confirmadas asociadas a un cierre. Usada por el reporte."""
+    result = await db.execute(
+        QUERY_CONFIRMADAS_POR_INVENTARIO, {"idinventariomes": idinventariomes}
+    )
+    return [dict(r) for r in result.mappings().all()]

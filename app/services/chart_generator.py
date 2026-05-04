@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 
-
 # ── Paleta TALOS ──────────────────────────────────────────────────────────────
 AZUL = "#2563EB"
 AZUL_CLARO = "#93C5FD"
@@ -42,6 +41,10 @@ PALETA_CATS = [AZUL, VERDE, NARANJA]  # Alimentos, Bebidas, Misceláneos
 
 # Tamaño estándar para todas las gráficas
 FIG_W, FIG_H = 7, 4
+
+
+def _money(x: float) -> str:
+    return f"${x:,.0f}"
 
 
 def _to_base64(fig: plt.Figure) -> str:
@@ -170,7 +173,6 @@ def chart_bar_faltantes_sobrantes(data: dict) -> str:
 
 
 def chart_histograma_diferencias(valores: list[float]) -> str:
-    """valores = lista de inventariomesdetalle_difimporte"""
     datos = [v for v in valores if v != 0]
     if not datos:
         datos = [0]
@@ -178,29 +180,40 @@ def chart_histograma_diferencias(valores: list[float]) -> str:
     fig, ax = _base_fig()
 
     n, bins, patches = ax.hist(
-        datos, bins=15, color=AZUL, edgecolor="white", linewidth=0.8
+        datos,
+        bins=min(20, max(5, int(len(datos) ** 0.5))),  # bins dinámicos
+        edgecolor="white",
+        linewidth=0.8,
     )
 
-    # Colorear barras negativas de rojo
+    # Colorear por signo
     for patch, left in zip(patches, bins[:-1]):
-        if left < 0:
-            patch.set_facecolor(ROJO_CLARO)
+        patch.set_facecolor(ROJO_CLARO if left < 0 else AZUL)
 
-    ax.axvline(0, color=GRIS, linewidth=1.2, linestyle="--", alpha=0.7)
-    ax.set_xlabel("Importe de diferencia ($)", fontsize=10, color=GRIS)
-    ax.set_ylabel("Número de productos", fontsize=10, color=GRIS)
-    ax.set_title(
-        "Distribución de diferencias en importe",
-        fontsize=12,
-        fontweight="bold",
-        color="#1F2937",
+    # 🔥 Líneas estadísticas
+    mean = np.mean(datos)
+    median = np.median(datos)
+
+    ax.axvline(
+        mean, color=AZUL, linestyle="--", linewidth=1.5, label=f"Media {_money(mean)}"
     )
+    ax.axvline(
+        median,
+        color=MORADO,
+        linestyle=":",
+        linewidth=1.5,
+        label=f"Mediana {_money(median)}",
+    )
+    ax.axvline(0, color=GRIS, linestyle="-", linewidth=1)
 
-    leyenda = [
-        mpatches.Patch(color=ROJO_CLARO, label="Faltantes"),
-        mpatches.Patch(color=AZUL, label="Sobrantes / sin diferencia"),
-    ]
-    ax.legend(handles=leyenda, fontsize=9, frameon=False)
+    ax.set_title(
+        "Distribución de diferencias en importe", fontsize=12, fontweight="bold"
+    )
+    ax.set_xlabel("Importe ($)")
+    ax.set_ylabel("Frecuencia")
+
+    ax.legend(fontsize=8, frameon=False)
+
     return _to_base64(fig)
 
 
@@ -300,6 +313,18 @@ def chart_donut_revision(data: dict) -> str:
         fontsize=11,
         fontweight="bold",
         color="#1F2937",
+    )
+
+    pct_rev = (revisados / total) * 100 if total else 0
+
+    ax.text(
+        0,
+        0,
+        f"{pct_rev:.0f}%\nrevisado",
+        ha="center",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
     )
 
     ax.legend(

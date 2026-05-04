@@ -26,7 +26,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-
 # ── Constantes ────────────────────────────────────────────────────────────────
 
 UMBRAL_ALTO_PCT: float = 150.0  # % sobre la media para alertas de prioridad alta
@@ -101,12 +100,13 @@ class DataProcessor:
         self,
         header: dict,
         detalle: list[dict],
+        transferencias: list[dict] | None = None,
         pendientes_validacion: list[dict] | None = None,
     ) -> None:
         self.header = header
+        self.transferencias = transferencias or []
         self.pendientes = pendientes_validacion or []
 
-        # DataFrame principal — toda la magia estadística sucede aquí
         self.df = self._build_dataframe(detalle)
 
     # ── Constructor del DataFrame ─────────────────────────────────────────────
@@ -166,6 +166,7 @@ class DataProcessor:
         ctx.update(self._ctx_movimientos())
         ctx.update(self._ctx_reajustes())
         ctx.update(self._ctx_rankings())
+        ctx.update(self._ctx_transferencias())
         ctx.update(self._ctx_aclaraciones())
         ctx.update(self._ctx_validacion_catalogo())
         ctx.update(self._ctx_conclusiones(ctx))
@@ -258,6 +259,56 @@ class DataProcessor:
             "difimporte_min": _fmt(_safe_stat(diff_imp, "min")),
             "difimporte_max": _fmt(_safe_stat(diff_imp, "max")),
             "difimporte_suma_abs": _fmt(_safe_stat(diff_imp.abs(), "sum")),
+        }
+
+    def _ctx_transferencias(self) -> dict:
+        if not self.transferencias:
+            return {
+                "count_transferencias": 0,
+                "importe_transferencias": "0.00",
+                "faltante_bruto": "0.00",
+                "pct_faltante_explicado": "0.00",
+                "perdida_real": "0.00",
+                "transferencias_internas": [],
+                "transferencias_entre_suc": [],
+            }
+
+        df = self.df
+
+        # Faltante original
+        faltante_bruto = float(self.header.get("inventariomes_faltantes", 0) or 0)
+
+        # Total transferencias
+        importe_transferencias = sum(
+            float(t.get("transferencia_importe") or 0) for t in self.transferencias
+        )
+
+        # Clasificación
+        internas = []
+        entre_suc = []
+
+        for t in self.transferencias:
+            if t.get("transferencia_tipo") == "interna":
+                internas.append(t)
+            else:
+                entre_suc.append(t)
+
+        # KPIs
+        perdida_real = faltante_bruto - importe_transferencias
+        pct_explicado = (
+            (importe_transferencias / abs(faltante_bruto)) * 100
+            if faltante_bruto
+            else 0
+        )
+
+        return {
+            "count_transferencias": len(self.transferencias),
+            "importe_transferencias": _fmt(importe_transferencias),
+            "faltante_bruto": _fmt(faltante_bruto),
+            "pct_faltante_explicado": _fmt(pct_explicado),
+            "perdida_real": _fmt(perdida_real),
+            "transferencias_internas": internas,
+            "transferencias_entre_suc": entre_suc,
         }
 
     def _ctx_stats_por_categoria(self) -> dict:

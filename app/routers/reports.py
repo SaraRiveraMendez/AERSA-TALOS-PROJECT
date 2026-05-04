@@ -23,7 +23,7 @@ from app.models import GenerateReportRequest, ReportStatusResponse
 from app.services.data_processor import DataProcessor
 from app.services.chart_generator import generate_all_charts
 from app.services.html_generator import render_report_html
-from app.services.pdf_generator import run_pdf_sync
+from app.services.pdf_generator import run_pdf_async
 from app.config import get_settings
 
 router = APIRouter(prefix="/reports", tags=["Reportes"])
@@ -141,7 +141,7 @@ async def _run_report_pipeline(
 
         # 5. PDF con Playwright en thread separado
         pdf_path = _get_pdf_path(idinventariomes)
-        await asyncio.to_thread(run_pdf_sync, html_content, pdf_path)
+        await asyncio.to_thread(run_pdf_async, html_content, pdf_path)
 
         print(f"[Pipeline] ✓ Reporte {idinventariomes} listo → {pdf_path}")
 

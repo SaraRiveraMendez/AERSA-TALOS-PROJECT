@@ -6,7 +6,7 @@
 
 ## Contexto
 
-TALOS es una plataforma SaaS de gestión de inventarios, compras y ventas para grupos restauranteros. Cada empresa cliente tiene su propio catálogo de productos, sucursales y almacenes dentro del sistema. La base `talos_tecmty` contiene datos reales de dos empresas con las que se está desarrollando el copiloto.
+TALOS es una plataforma SaaS de gestión de inventarios, compras y ventas para grupos restauranteros. Cada empresa cliente tiene su propio catálogo de productos, sucursales y almacenes dentro del sistema. La base `talos_tecmty` contiene datos reales de 822 empresas y 457 sucursales clientes de la plataforma.
 
 Este documento forma parte del proceso de construcción del copiloto. Antes de poder usar los datos para cualquier análisis (diferencias de inventario, costo potencial, variación de compras) fue necesario entender qué columnas y registros eran confiables y cuáles no. Aquí se documenta la lógica detrás de cada decisión de limpieza, los queries de diagnóstico que se corrieron, y cómo usar las vistas resultantes.
 

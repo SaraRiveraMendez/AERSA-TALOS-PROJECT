@@ -3,690 +3,654 @@
 <head>
 <meta charset="UTF-8"/>
 <style>
-  /* ── Reset y base ── */
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, sans-serif; font-size: 10px; color: #1F2937;
-         background: white; padding: 24px 32px; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10px;
+         color: #1E293B; background: white; padding: 28px 36px; }
 
-  /* ── Encabezado ── */
-  .header { display: flex; justify-content: space-between; align-items: flex-start;
-            border-bottom: 3px solid #2563EB; padding-bottom: 12px; margin-bottom: 20px; }
-  .header-left h1 { font-size: 18px; color: #2563EB; font-weight: bold; }
-  .header-left p  { font-size: 10px; color: #6B7280; margin-top: 2px; }
-  .header-right   { text-align: right; font-size: 9px; color: #6B7280; line-height: 1.6; }
-  .badge { display: inline-block; background: #DBEAFE; color: #1D4ED8;
-           padding: 2px 8px; border-radius: 9999px; font-size: 9px; font-weight: bold; }
-  .badge.green  { background: #DCFCE7; color: #166534; }
-  .badge.orange { background: #FEF3C7; color: #92400E; }
-  .badge.red    { background: #FEE2E2; color: #991B1B; }
+  /* ── Header ── */
+  .header {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 16px; align-items: start;
+    border-bottom: 4px solid #2563EB;
+    padding-bottom: 14px; margin-bottom: 20px;
+  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .header-logo {
+    background: #2563EB; color: white; font-weight: 900;
+    font-size: 14px; padding: 6px 10px; border-radius: 6px; letter-spacing: 1px;
+  }
+  .header-title h1 { font-size: 17px; color: #1E293B; font-weight: 700; }
+  .header-title p  { font-size: 9px; color: #64748B; margin-top: 2px; }
+  .header-meta { text-align: right; font-size: 8.5px; color: #64748B; line-height: 1.8; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 9999px;
+    font-size: 8px; font-weight: 700; letter-spacing: 0.05em;
+  }
+  .badge-green  { background: #DCFCE7; color: #15803D; }
+  .badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+  .badge-orange { background: #FEF3C7; color: #B45309; }
 
-  /* ── Tabla de info ── */
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr;
-               gap: 8px; margin-bottom: 20px; }
-  .info-box  { background: #F9FAFB; border: 1px solid #E5E7EB;
-               border-radius: 6px; padding: 10px 14px; }
-  .info-box .label { font-size: 8px; color: #6B7280; text-transform: uppercase;
-                     letter-spacing: 0.05em; margin-bottom: 2px; }
-  .info-box .value { font-size: 11px; font-weight: bold; color: #1F2937; }
+  /* ── Info grid ── */
+  .info-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 22px;
+  }
+  .info-box {
+    background: #F8FAFC; border: 1px solid #E2E8F0;
+    border-radius: 8px; padding: 10px 12px;
+    border-top: 3px solid #2563EB;
+  }
+  .info-box .lbl { font-size: 7.5px; color: #94A3B8; text-transform: uppercase;
+                   letter-spacing: 0.06em; margin-bottom: 3px; }
+  .info-box .val { font-size: 11px; font-weight: 700; color: #1E293B; }
 
   /* ── Secciones ── */
-  .section { margin-bottom: 24px; }
-  .section-title { font-size: 13px; font-weight: bold; color: #2563EB;
-                   border-left: 4px solid #2563EB; padding-left: 8px;
-                   margin-bottom: 10px; }
-  .section-subtitle { font-size: 11px; font-weight: bold; color: #374151;
-                      margin: 12px 0 6px 0; }
+  .section { margin-bottom: 26px; }
+  .section-title {
+    font-size: 12px; font-weight: 700; color: #2563EB;
+    border-left: 4px solid #2563EB; padding-left: 10px;
+    margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .section-sub {
+    font-size: 10.5px; font-weight: 600; color: #374151;
+    margin: 14px 0 7px; padding-left: 4px;
+    border-bottom: 1px solid #E2E8F0; padding-bottom: 4px;
+  }
 
-  /* ── KPI Cards ── */
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-              margin-bottom: 16px; }
-  .kpi-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px;
-              padding: 10px; text-align: center; }
-  .kpi-card.danger  { border-color: #FCA5A5; background: #FFF5F5; }
-  .kpi-card.success { border-color: #86EFAC; background: #F0FDF4; }
-  .kpi-card.warning { border-color: #FDE68A; background: #FFFBEB; }
-  .kpi-label { font-size: 8px; color: #6B7280; text-transform: uppercase;
-               letter-spacing: 0.04em; margin-bottom: 4px; }
-  .kpi-value { font-size: 16px; font-weight: bold; color: #1F2937; }
-  .kpi-value.danger  { color: #DC2626; }
-  .kpi-value.success { color: #16A34A; }
-  .kpi-value.warning { color: #D97706; }
-  .kpi-sub   { font-size: 8px; color: #9CA3AF; margin-top: 2px; }
+  /* ── KPI grid ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
+  .kpi-row-3 { grid-template-columns: repeat(3,1fr); }
+  .kpi {
+    border-radius: 10px; padding: 12px 10px; text-align: center;
+    border: 1px solid #E2E8F0; background: #F8FAFC;
+  }
+  .kpi.red    { border-color: #FECACA; background: #FFF5F5; }
+  .kpi.green  { border-color: #BBF7D0; background: #F0FDF4; }
+  .kpi.amber  { border-color: #FDE68A; background: #FFFBEB; }
+  .kpi.blue   { border-color: #BFDBFE; background: #EFF6FF; }
+  .kpi-lbl  { font-size: 7.5px; color: #94A3B8; text-transform: uppercase;
+               letter-spacing: 0.05em; margin-bottom: 5px; }
+  .kpi-val  { font-size: 18px; font-weight: 800; color: #1E293B; line-height: 1; }
+  .kpi-val.red   { color: #DC2626; }
+  .kpi-val.green { color: #16A34A; }
+  .kpi-val.amber { color: #D97706; }
+  .kpi-val.blue  { color: #2563EB; }
+  .kpi-sub  { font-size: 7.5px; color: #94A3B8; margin-top: 4px; }
 
   /* ── Tablas ── */
-  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 9px; }
-  th { background: #2563EB; color: white; padding: 6px 8px;
-       text-align: left; font-size: 8px; text-transform: uppercase;
-       letter-spacing: 0.04em; }
-  td { padding: 5px 8px; border-bottom: 1px solid #F3F4F6; }
-  tr:nth-child(even) td { background: #F9FAFB; }
-  tr:hover td { background: #EFF6FF; }
-  .text-right { text-align: right; }
-  .text-center { text-align: center; }
-  .neg { color: #DC2626; font-weight: bold; }
-  .pos { color: #16A34A; font-weight: bold; }
-  .zero { color: #9CA3AF; }
-
-  /* ── Alertas ── */
-  .alert { border-radius: 6px; padding: 10px 14px; margin-bottom: 10px;
-           border-left: 4px solid; }
-  .alert.high   { background: #FFF5F5; border-color: #DC2626; }
-  .alert.medium { background: #FFFBEB; border-color: #D97706; }
-  .alert.low    { background: #F0FDF4; border-color: #16A34A; }
-  .alert-title  { font-weight: bold; font-size: 10px; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 8.5px; }
+  thead tr { background: #1E40AF; }
+  th { color: white; padding: 7px 9px; text-align: left;
+       font-size: 7.5px; text-transform: uppercase; letter-spacing: 0.05em;
+       font-weight: 600; }
+  td { padding: 5px 9px; border-bottom: 1px solid #F1F5F9; color: #334155; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+  .tr { text-align: right; }
+  .tc { text-align: center; }
+  .neg { color: #DC2626; font-weight: 700; }
+  .pos { color: #16A34A; font-weight: 700; }
+  .zero { color: #CBD5E1; }
+  .mono { font-family: monospace; }
 
   /* ── Gráficas ── */
-  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-                 margin-bottom: 20px; }
-  .chart-box   { background: #F9FAFB; border: 1px solid #E5E7EB;
-                 border-radius: 8px; padding: 10px; }
-  .chart-box.full { grid-column: 1 / -1; }
-  .chart-box img  { width: 100%; height: auto; display: block; }
-  .chart-caption  { font-size: 8px; color: #6B7280; text-align: center;
-                    margin-top: 6px; font-style: italic; }
+  .charts-2 {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 14px; margin-bottom: 16px;
+  }
+  .charts-1 { margin-bottom: 16px; }
+  .chart-card {
+    background: #F8FAFC; border: 1px solid #E2E8F0;
+    border-radius: 10px; padding: 12px; overflow: hidden;
+  }
+  .chart-card img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .chart-cap {
+    font-size: 8px; color: #94A3B8; text-align: center;
+    margin-top: 7px; font-style: italic;
+  }
+
+  /* ── Transferencias ── */
+  .transf-summary {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 10px; margin-bottom: 14px;
+  }
+  .chip {
+    display: inline-block; padding: 2px 7px; border-radius: 4px;
+    font-size: 7.5px; font-weight: 600;
+  }
+  .chip-auto   { background: #FEF3C7; color: #B45309; }
+  .chip-manual { background: #DCFCE7; color: #15803D; }
 
   /* ── Conclusiones ── */
-  .conclusion-item { display: flex; gap: 10px; margin-bottom: 8px;
-                     align-items: flex-start; }
-  .conclusion-num  { background: #2563EB; color: white; border-radius: 50%;
-                     width: 18px; height: 18px; display: flex; align-items: center;
-                     justify-content: center; font-size: 9px; font-weight: bold;
-                     flex-shrink: 0; }
-  .conclusion-text { font-size: 9.5px; line-height: 1.5; color: #374151; }
-  .conclusion-text strong { color: #1F2937; }
+  .concl { display: flex; gap: 10px; margin-bottom: 9px; align-items: flex-start; }
+  .concl-num {
+    background: #2563EB; color: white; border-radius: 50%;
+    min-width: 18px; height: 18px; font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .concl-txt { font-size: 9.5px; line-height: 1.6; color: #374151; }
+  .concl-txt strong { color: #1E293B; }
 
   /* ── Footer ── */
-  .footer { border-top: 1px solid #E5E7EB; padding-top: 10px; margin-top: 24px;
-            font-size: 8px; color: #9CA3AF; text-align: center; }
+  .footer {
+    border-top: 1px solid #E2E8F0; margin-top: 28px; padding-top: 10px;
+    font-size: 8px; color: #94A3B8; text-align: center;
+  }
 
   /* ── Page breaks ── */
-  .page-break { page-break-before: always; }
-  .no-break   { page-break-inside: avoid; }
+  .pb { page-break-before: always; }
+  .nob { page-break-inside: avoid; }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════
-     ENCABEZADO
-═══════════════════════════════════════════════════════════ -->
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
 <div class="header">
-  <div class="header-left">
-    <h1>Reporte de Auditoría de Inventario</h1>
-    <p>Sistema TALOS — Módulo de Cierre Semanal</p>
+  <div>
+    <div class="header-brand">
+      <div class="header-logo">TALOS</div>
+      <div class="header-title">
+        <h1>Reporte de Auditoría de Inventario</h1>
+        <p>Módulo de Cierre Semanal — Generado automáticamente</p>
+      </div>
+    </div>
   </div>
-  <div class="header-right">
-    <span class="badge {% if inventariomes_estatus == 'finalizado' %}green{% else %}orange{% endif %}">
-      {{ inventariomes_estatus | upper }}
-    </span><br><br>
-    Generado: {{ inventariomes_createdat }}<br>
-    Última actualización: {{ inventariomes_updatedat }}<br>
-    Versión: {{ inventariomes_version }}
-  </div>
-</div>
-
-<!-- Info general -->
-<div class="info-grid">
-  <div class="info-box">
-    <div class="label">Empresa / Sucursal</div>
-    <div class="value">{{ idempresa }} / {{ idsucursal }}</div>
-  </div>
-  <div class="info-box">
-    <div class="label">Almacén</div>
-    <div class="value">{{ almacen_nombre }}</div>
-  </div>
-  <div class="info-box">
-    <div class="label">Período auditado</div>
-    <div class="value">{{ inventariomes_fecha }}</div>
-  </div>
-  <div class="info-box">
-    <div class="label">Auditor asignado</div>
-    <div class="value">{{ idauditor if idauditor else 'No asignado' }}</div>
+  <div class="header-meta">
+    <span class="badge badge-green">{{ inventariomes_estatus | upper }}</span><br>
+    <strong>Generado:</strong> {{ inventariomes_createdat or '—' }}<br>
+    <strong>Actualizado:</strong> {{ inventariomes_updatedat or '—' }}<br>
+    <strong>Versión:</strong> {{ inventariomes_version }}
   </div>
 </div>
 
+<!-- Info strip -->
+<div class="info-strip">
+  <div class="info-box">
+    <div class="lbl">Empresa / Sucursal</div>
+    <div class="val">{{ idempresa }} / {{ idsucursal }}</div>
+  </div>
+  <div class="info-box">
+    <div class="lbl">Almacén</div>
+    <div class="val">{{ almacen_nombre }}</div>
+  </div>
+  <div class="info-box">
+    <div class="lbl">Período auditado</div>
+    <div class="val">{{ inventariomes_fecha }}</div>
+  </div>
+  <div class="info-box">
+    <div class="lbl">Auditor asignado</div>
+    <div class="val">{{ idauditor if idauditor else 'Sin asignar' }}</div>
+  </div>
+</div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     I. RESUMEN EJECUTIVO
-═══════════════════════════════════════════════════════════ -->
+
+<!-- ══ I. RESUMEN EJECUTIVO ════════════════════════════════════════════════ -->
 <div class="section">
   <div class="section-title">I. Resumen Ejecutivo</div>
-  <p style="font-size:10px; line-height:1.7; color:#374151;">
-    El presente reporte corresponde al cierre de inventario del período
-    <strong>{{ inventariomes_fecha }}</strong> para la sucursal
-    <strong>{{ idsucursal }}</strong>, almacén <strong>{{ almacen_nombre }}</strong>.
-    El inventario registra un valor físico total de
-    <strong>${{ inventariomes_totalimportefisico }}</strong>,
-    con un balance neto de <strong>${{ inventariomes_total }}</strong>
-    considerando faltantes y sobrantes.
-    Se procesaron <strong>{{ count_faltantes|int + count_sobrantes|int + count_exactos|int }}</strong>
-    productos en total, de los cuales
-    <strong>{{ count_faltantes }}</strong> presentan faltante,
-    <strong>{{ count_sobrantes }}</strong> sobrante y
-    <strong>{{ count_exactos }}</strong> están exactos.
+  <p style="font-size:10px;line-height:1.75;color:#374151;">
+    Reporte del período <strong>{{ inventariomes_fecha }}</strong> —
+    Sucursal <strong>{{ idsucursal }}</strong>, almacén <strong>{{ almacen_nombre }}</strong>.
+    Inventario físico total de <strong>${{ inventariomes_totalimportefisico }}</strong>
+    con balance neto de <strong>${{ inventariomes_total }}</strong>.
+    Se auditaron <strong>{{ (count_faltantes|int + count_sobrantes|int + count_exactos|int) }}</strong>
+    productos: <span class="neg">{{ count_faltantes }} con faltante</span>,
+    <span class="pos">{{ count_sobrantes }} con sobrante</span> y
+    {{ count_exactos }} exactos.
   </p>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     II. KPIs
-═══════════════════════════════════════════════════════════ -->
+<!-- ══ II. KPIs ════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-title">II. Indicadores Clave (KPIs)</div>
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Inventario físico total</div>
-      <div class="kpi-value">${{ inventariomes_totalimportefisico }}</div>
+  <div class="section-title">II. Indicadores Clave</div>
+
+  <div class="kpi-row">
+    <div class="kpi blue">
+      <div class="kpi-lbl">Inventario físico</div>
+      <div class="kpi-val blue">${{ inventariomes_totalimportefisico }}</div>
     </div>
-    <div class="kpi-card danger">
-      <div class="kpi-label">Total faltantes</div>
-      <div class="kpi-value danger">${{ inventariomes_faltantes }}</div>
+    <div class="kpi red">
+      <div class="kpi-lbl">Total faltantes</div>
+      <div class="kpi-val red">${{ inventariomes_faltantes }}</div>
       <div class="kpi-sub">{{ faltantes_pct }}% del total</div>
     </div>
-    <div class="kpi-card success">
-      <div class="kpi-label">Total sobrantes</div>
-      <div class="kpi-value success">${{ inventariomes_sobrantes }}</div>
+    <div class="kpi green">
+      <div class="kpi-lbl">Total sobrantes</div>
+      <div class="kpi-val green">${{ inventariomes_sobrantes }}</div>
       <div class="kpi-sub">{{ sobrantes_pct }}% del total</div>
     </div>
-    <div class="kpi-card {% if inventariomes_total|float < 0 %}danger{% else %}success{% endif %}">
-      <div class="kpi-label">Balance neto</div>
-      <div class="kpi-value {% if inventariomes_total|float < 0 %}danger{% else %}success{% endif %}">
+    <div class="kpi {% if inventariomes_total|float < 0 %}red{% else %}green{% endif %}">
+      <div class="kpi-lbl">Balance neto</div>
+      <div class="kpi-val {% if inventariomes_total|float < 0 %}red{% else %}green{% endif %}">
         ${{ inventariomes_total }}
       </div>
     </div>
   </div>
 
-  <div class="kpi-grid">
-    <div class="kpi-card danger">
-      <div class="kpi-label">Productos con faltante</div>
-      <div class="kpi-value danger">{{ count_faltantes }}</div>
+  <div class="kpi-row">
+    <div class="kpi red">
+      <div class="kpi-lbl">Productos con faltante</div>
+      <div class="kpi-val red">{{ count_faltantes }}</div>
     </div>
-    <div class="kpi-card success">
-      <div class="kpi-label">Productos con sobrante</div>
-      <div class="kpi-value success">{{ count_sobrantes }}</div>
+    <div class="kpi green">
+      <div class="kpi-lbl">Productos con sobrante</div>
+      <div class="kpi-val green">{{ count_sobrantes }}</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Productos exactos</div>
-      <div class="kpi-value">{{ count_exactos }}</div>
+    <div class="kpi">
+      <div class="kpi-lbl">Productos exactos</div>
+      <div class="kpi-val">{{ count_exactos }}</div>
     </div>
-    <div class="kpi-card warning">
-      <div class="kpi-label">Tasa de revisión</div>
-      <div class="kpi-value warning">{{ tasa_revision }}%</div>
+    <div class="kpi amber">
+      <div class="kpi-lbl">Tasa de revisión</div>
+      <div class="kpi-val amber">{{ tasa_revision }}%</div>
       <div class="kpi-sub">{{ count_sin_revisar }} pendientes</div>
     </div>
   </div>
 
-  <!-- Subtotales por categoría -->
+  <!-- Tabla por categoría -->
   <table>
     <thead>
       <tr>
         <th>Categoría</th>
-        <th class="text-right">Importe físico</th>
-        <th class="text-right">N° productos</th>
-        <th class="text-right">Media diferencia</th>
-        <th class="text-right">Total importe diferencia</th>
+        <th class="tr">Importe físico</th>
+        <th class="tc">Productos</th>
+        <th class="tr">Media diferencia</th>
+        <th class="tr">Total diferencia</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong>Alimentos</strong></td>
-        <td class="text-right">${{ inventariomes_finalalimentos }}</td>
-        <td class="text-right">{{ ali_n }}</td>
-        <td class="text-right">{{ ali_media_diff }}</td>
-        <td class="text-right {% if ali_total_diff|float < 0 %}neg{% elif ali_total_diff|float > 0 %}pos{% endif %}">
-          ${{ ali_total_diff }}
-        </td>
+        <td class="tr">${{ inventariomes_finalalimentos }}</td>
+        <td class="tc">{{ ali_n }}</td>
+        <td class="tr">{{ ali_media_diff }}</td>
+        <td class="tr {% if ali_total_diff|float < 0 %}neg{% elif ali_total_diff|float > 0 %}pos{% endif %}">${{ ali_total_diff }}</td>
       </tr>
       <tr>
         <td><strong>Bebidas</strong></td>
-        <td class="text-right">${{ inventariomes_finalbebidas }}</td>
-        <td class="text-right">{{ beb_n }}</td>
-        <td class="text-right">{{ beb_media_diff }}</td>
-        <td class="text-right {% if beb_total_diff|float < 0 %}neg{% elif beb_total_diff|float > 0 %}pos{% endif %}">
-          ${{ beb_total_diff }}
-        </td>
+        <td class="tr">${{ inventariomes_finalbebidas }}</td>
+        <td class="tc">{{ beb_n }}</td>
+        <td class="tr">{{ beb_media_diff }}</td>
+        <td class="tr {% if beb_total_diff|float < 0 %}neg{% elif beb_total_diff|float > 0 %}pos{% endif %}">${{ beb_total_diff }}</td>
       </tr>
       <tr>
         <td><strong>Misceláneos / Gastos</strong></td>
-        <td class="text-right">${{ inventariomes_finalmiscelaneos }}</td>
-        <td class="text-right">{{ misc_n }}</td>
-        <td class="text-right">{{ misc_media_diff }}</td>
-        <td class="text-right {% if misc_total_diff|float < 0 %}neg{% elif misc_total_diff|float > 0 %}pos{% endif %}">
-          ${{ misc_total_diff }}
-        </td>
+        <td class="tr">${{ inventariomes_finalmiscelaneos }}</td>
+        <td class="tc">{{ misc_n }}</td>
+        <td class="tr">{{ misc_media_diff }}</td>
+        <td class="tr {% if misc_total_diff|float < 0 %}neg{% elif misc_total_diff|float > 0 %}pos{% endif %}">${{ misc_total_diff }}</td>
       </tr>
     </tbody>
   </table>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     III. VISUALIZACIONES
-═══════════════════════════════════════════════════════════ -->
-<div class="section page-break">
+<!-- ══ III. VISUALIZACIONES ════════════════════════════════════════════════ -->
+<div class="section pb">
   <div class="section-title">III. Visualizaciones</div>
 
-  <div class="charts-grid">
-    <div class="chart-box">
+  <div class="charts-2">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.pie }}" alt="Composición por categoría"/>
-      <div class="chart-caption">Fig. 1 — Composición del inventario físico por categoría</div>
+      <div class="chart-cap">Fig. 1 — Composición del inventario por categoría</div>
     </div>
-    <div class="chart-box">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.barras }}" alt="Faltantes vs Sobrantes"/>
-      <div class="chart-caption">Fig. 2 — Faltantes vs Sobrantes (importe $)</div>
+      <div class="chart-cap">Fig. 2 — Faltantes vs Sobrantes ($)</div>
     </div>
-    <div class="chart-box">
+  </div>
+
+  <div class="charts-2">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.donut }}" alt="Estado de revisión"/>
-      <div class="chart-caption">Fig. 5 — Proporción de productos revisados vs pendientes</div>
+      <div class="chart-cap">Fig. 3 — Estado de revisión de productos</div>
     </div>
-    <div class="chart-box">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.histograma }}" alt="Distribución diferencias"/>
-      <div class="chart-caption">Fig. 3 — Distribución de diferencias en importe</div>
+      <div class="chart-cap">Fig. 4 — Distribución de diferencias en importe</div>
     </div>
-    <div class="chart-box full">
+  </div>
+
+  <div class="charts-1">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.top10 }}" alt="Top 10 faltantes"/>
-      <div class="chart-caption">Fig. 4 — Top 10 productos con mayor faltante en importe</div>
+      <div class="chart-cap">Fig. 5 — Top 10 productos con mayor faltante en importe</div>
     </div>
-    <div class="chart-box full">
+  </div>
+
+  <div class="charts-1">
+    <div class="chart-card">
       <img src="data:image/png;base64,{{ charts.heatmap }}" alt="Heatmap movimientos"/>
-      <div class="chart-caption">Fig. 6 — Mapa de calor: movimientos por tipo y categoría</div>
+      <div class="chart-cap">Fig. 6 — Mapa de calor: movimientos por tipo y categoría</div>
     </div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     IV. ALERTAS
-═══════════════════════════════════════════════════════════ -->
-<div class="section page-break">
+<!-- ══ IV. ALERTAS ═════════════════════════════════════════════════════════ -->
+<div class="section pb">
   <div class="section-title">IV. Alertas de Auditoría</div>
 
-  <!-- Prioridad Alta -->
-  <div class="section-subtitle">🔴 Prioridad Alta — Faltantes de alto impacto</div>
+  <div class="section-sub">🔴 Prioridad Alta — Faltantes de alto impacto</div>
   {% if alertas_alta %}
   <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th class="text-right">Stock teórico</th>
-        <th class="text-right">Stock físico</th>
-        <th class="text-right">Diferencia</th>
-        <th class="text-right">Importe</th>
-        <th class="text-right">Costo prom.</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>#</th><th>Producto</th><th>Categoría</th>
+      <th class="tr">Stock teórico</th><th class="tr">Stock físico</th>
+      <th class="tr">Diferencia</th><th class="tr">Importe</th><th class="tr">Costo prom.</th>
+    </tr></thead>
     <tbody>
-      {% for p in alertas_alta %}
-      <tr>
-        <td class="text-center">{{ loop.index }}</td>
-        <td>{{ p.producto_nombre }}</td>
-        <td>{{ p.categoria_nombre }}</td>
-        <td class="text-right">{{ "%.3f"|format(p.inventariomesdetalle_stockteorico|float) }}</td>
-        <td class="text-right">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
-        <td class="text-right neg">{{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}</td>
-        <td class="text-right neg">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
-        <td class="text-right">${{ "%.2f"|format(p.inventariomesdetalle_costopromedio|float) }}</td>
-      </tr>
-      {% endfor %}
+    {% for p in alertas_alta %}
+    <tr>
+      <td class="tc">{{ loop.index }}</td>
+      <td>{{ p.producto_nombre }}</td>
+      <td>{{ p.categoria_nombre }}</td>
+      <td class="tr mono">{{ "%.3f"|format(p.inventariomesdetalle_stockteorico|float) }}</td>
+      <td class="tr mono">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
+      <td class="tr neg">{{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}</td>
+      <td class="tr neg">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
+      <td class="tr">${{ "%.2f"|format(p.inventariomesdetalle_costopromedio|float) }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <div class="alert low"><div class="alert-title">Sin alertas de prioridad alta en este período.</div></div>
+  <p style="color:#16A34A;font-size:9.5px;margin-bottom:10px;">✓ Sin alertas de prioridad alta.</p>
   {% endif %}
 
-  <!-- Prioridad Media -->
-  <div class="section-subtitle">🟡 Prioridad Media — Sobrantes significativos</div>
+  <div class="section-sub">🟡 Prioridad Media — Sobrantes significativos</div>
   {% if alertas_media %}
   <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th class="text-right">Stock teórico</th>
-        <th class="text-right">Stock físico</th>
-        <th class="text-right">Diferencia</th>
-        <th class="text-right">Importe</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>#</th><th>Producto</th><th>Categoría</th>
+      <th class="tr">Stock teórico</th><th class="tr">Stock físico</th>
+      <th class="tr">Diferencia</th><th class="tr">Importe</th>
+    </tr></thead>
     <tbody>
-      {% for p in alertas_media %}
-      <tr>
-        <td class="text-center">{{ loop.index }}</td>
-        <td>{{ p.producto_nombre }}</td>
-        <td>{{ p.categoria_nombre }}</td>
-        <td class="text-right">{{ "%.3f"|format(p.inventariomesdetalle_stockteorico|float) }}</td>
-        <td class="text-right">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
-        <td class="text-right pos">{{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}</td>
-        <td class="text-right pos">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
-      </tr>
-      {% endfor %}
+    {% for p in alertas_media %}
+    <tr>
+      <td class="tc">{{ loop.index }}</td>
+      <td>{{ p.producto_nombre }}</td>
+      <td>{{ p.categoria_nombre }}</td>
+      <td class="tr mono">{{ "%.3f"|format(p.inventariomesdetalle_stockteorico|float) }}</td>
+      <td class="tr mono">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
+      <td class="tr pos">{{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}</td>
+      <td class="tr pos">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% else %}
-  <div class="alert low"><div class="alert-title">Sin sobrantes significativos en este período.</div></div>
+  <p style="color:#16A34A;font-size:9.5px;margin-bottom:10px;">✓ Sin sobrantes significativos.</p>
   {% endif %}
 
-  <!-- Prioridad Baja -->
-  <div class="section-subtitle">🟢 Prioridad Baja — Pendientes de revisión</div>
+  <div class="section-sub">🟢 Prioridad Baja — Pendientes de revisión</div>
   {% if alertas_baja %}
   <table>
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Unidad</th>
-        <th class="text-right">Diferencia</th>
-        <th class="text-right">Importe dif.</th>
-        <th>Aclaración</th>
-        <th>Categoría aclaración</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Producto</th><th>Unidad</th>
+      <th class="tr">Diferencia</th><th class="tr">Importe</th>
+      <th>Aclaración</th>
+    </tr></thead>
     <tbody>
-      {% for p in alertas_baja[:20] %}
-      <tr>
-        <td>{{ p.producto_nombre }}</td>
-        <td>{{ p.unidadmedida_nombre }}</td>
-        <td class="text-right {% if p.inventariomesdetalle_diferencia|float < 0 %}neg{% elif p.inventariomesdetalle_diferencia|float > 0 %}pos{% else %}zero{% endif %}">
-          {{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}
-        </td>
-        <td class="text-right {% if p.inventariomesdetalle_difimporte|float < 0 %}neg{% elif p.inventariomesdetalle_difimporte|float > 0 %}pos{% else %}zero{% endif %}">
-          ${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}
-        </td>
-        <td>{{ p.inventariomesdetalle_aclaracion or '—' }}</td>
-        <td>{{ p.inventariomesdetalle_categoria_aclaracion or '—' }}</td>
-      </tr>
-      {% endfor %}
+    {% for p in alertas_baja[:20] %}
+    <tr>
+      <td>{{ p.producto_nombre }}</td>
+      <td>{{ p.unidadmedida_nombre }}</td>
+      <td class="tr {% if p.inventariomesdetalle_diferencia|float < 0 %}neg{% elif p.inventariomesdetalle_diferencia|float > 0 %}pos{% else %}zero{% endif %}">
+        {{ "%.3f"|format(p.inventariomesdetalle_diferencia|float) }}</td>
+      <td class="tr {% if p.inventariomesdetalle_difimporte|float < 0 %}neg{% elif p.inventariomesdetalle_difimporte|float > 0 %}pos{% else %}zero{% endif %}">
+        ${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
+      <td>{{ p.inventariomesdetalle_aclaracion or '—' }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% if alertas_baja|length > 20 %}
-  <p style="font-size:9px; color:#6B7280; margin-top:4px;">
-    Se muestran 20 de {{ alertas_baja|length }} registros pendientes.
-  </p>
+  <p style="font-size:8.5px;color:#94A3B8;">Se muestran 20 de {{ alertas_baja|length }} registros pendientes.</p>
   {% endif %}
   {% else %}
-  <div class="alert low"><div class="alert-title">Todos los productos han sido revisados.</div></div>
+  <p style="color:#16A34A;font-size:9.5px;">✓ Todos los productos han sido revisados.</p>
   {% endif %}
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     V. ESTADÍSTICOS
-═══════════════════════════════════════════════════════════ -->
-<div class="section page-break">
-  <div class="section-title">V. Análisis Estadístico de Diferencias</div>
+<!-- ══ V. ESTADÍSTICOS ══════════════════════════════════════════════════════ -->
+<div class="section pb">
+  <div class="section-title">V. Análisis Estadístico</div>
 
-  <div class="charts-grid" style="grid-template-columns: 1fr 1fr;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <div>
-      <div class="section-subtitle">Diferencias en unidades</div>
+      <div class="section-sub">Diferencias en unidades</div>
       <table>
-        <tr><td>Media</td><td class="text-right"><strong>{{ diff_media }}</strong></td></tr>
-        <tr><td>Mediana</td><td class="text-right"><strong>{{ diff_mediana }}</strong></td></tr>
-        <tr><td>Desv. estándar</td><td class="text-right"><strong>{{ diff_desviacion }}</strong></td></tr>
-        <tr><td>Mínimo (mayor faltante)</td><td class="text-right neg"><strong>{{ diff_min }}</strong></td></tr>
-        <tr><td>Máximo (mayor sobrante)</td><td class="text-right pos"><strong>{{ diff_max }}</strong></td></tr>
-        <tr><td>Rango intercuartílico</td><td class="text-right"><strong>{{ diff_iqr }}</strong></td></tr>
+        <tr><td>Media</td><td class="tr mono"><strong>{{ diff_media }}</strong></td></tr>
+        <tr><td>Mediana</td><td class="tr mono"><strong>{{ diff_mediana }}</strong></td></tr>
+        <tr><td>Desv. estándar</td><td class="tr mono"><strong>{{ diff_desviacion }}</strong></td></tr>
+        <tr><td>Mínimo</td><td class="tr neg"><strong>{{ diff_min }}</strong></td></tr>
+        <tr><td>Máximo</td><td class="tr pos"><strong>{{ diff_max }}</strong></td></tr>
+        <tr><td>IQR</td><td class="tr mono"><strong>{{ diff_iqr }}</strong></td></tr>
       </table>
     </div>
     <div>
-      <div class="section-subtitle">Diferencias en importe ($)</div>
+      <div class="section-sub">Diferencias en importe ($)</div>
       <table>
-        <tr><td>Media</td><td class="text-right"><strong>${{ difimporte_media }}</strong></td></tr>
-        <tr><td>Mediana</td><td class="text-right"><strong>${{ difimporte_mediana }}</strong></td></tr>
-        <tr><td>Desv. estándar</td><td class="text-right"><strong>${{ difimporte_desviacion }}</strong></td></tr>
-        <tr><td>Mínimo</td><td class="text-right neg"><strong>${{ difimporte_min }}</strong></td></tr>
-        <tr><td>Máximo</td><td class="text-right pos"><strong>${{ difimporte_max }}</strong></td></tr>
-        <tr><td>Suma absoluta total</td><td class="text-right"><strong>${{ difimporte_suma_abs }}</strong></td></tr>
+        <tr><td>Media</td><td class="tr mono"><strong>${{ difimporte_media }}</strong></td></tr>
+        <tr><td>Mediana</td><td class="tr mono"><strong>${{ difimporte_mediana }}</strong></td></tr>
+        <tr><td>Desv. estándar</td><td class="tr mono"><strong>${{ difimporte_desviacion }}</strong></td></tr>
+        <tr><td>Mínimo</td><td class="tr neg"><strong>${{ difimporte_min }}</strong></td></tr>
+        <tr><td>Máximo</td><td class="tr pos"><strong>${{ difimporte_max }}</strong></td></tr>
+        <tr><td>Suma absoluta</td><td class="tr mono"><strong>${{ difimporte_suma_abs }}</strong></td></tr>
       </table>
     </div>
   </div>
 
-  <!-- Outliers -->
   {% if outliers %}
-  <div class="section-subtitle">Valores atípicos detectados (z-score ≥ 2σ)</div>
+  <div class="section-sub">Valores atípicos detectados (z-score ≥ 2σ)</div>
   <table>
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th class="text-right">Diferencia (u)</th>
-        <th class="text-right">Importe dif.</th>
-        <th class="text-right">Z-score</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Producto</th><th>Categoría</th>
+      <th class="tr">Diferencia (u)</th><th class="tr">Importe dif.</th>
+      <th class="tr">Z-score</th>
+    </tr></thead>
     <tbody>
-      {% for o in outliers %}
-      <tr>
-        <td>{{ o.producto_nombre }}</td>
-        <td>{{ o.categoria_nombre }}</td>
-        <td class="text-right {% if o.inventariomesdetalle_diferencia|float < 0 %}neg{% else %}pos{% endif %}">
-          {{ "%.3f"|format(o.inventariomesdetalle_diferencia|float) }}
-        </td>
-        <td class="text-right {% if o.inventariomesdetalle_difimporte|float < 0 %}neg{% else %}pos{% endif %}">
-          ${{ "%.2f"|format(o.inventariomesdetalle_difimporte|float) }}
-        </td>
-        <td class="text-right"><strong>{{ o._zscore_fmt }}σ</strong></td>
-      </tr>
-      {% endfor %}
+    {% for o in outliers %}
+    <tr>
+      <td>{{ o.producto_nombre }}</td>
+      <td>{{ o.categoria_nombre }}</td>
+      <td class="tr {% if o.inventariomesdetalle_diferencia|float < 0 %}neg{% else %}pos{% endif %}">
+        {{ "%.3f"|format(o.inventariomesdetalle_diferencia|float) }}</td>
+      <td class="tr {% if o.inventariomesdetalle_difimporte|float < 0 %}neg{% else %}pos{% endif %}">
+        ${{ "%.2f"|format(o.inventariomesdetalle_difimporte|float) }}</td>
+      <td class="tr"><strong>{{ o._zscore_fmt }}σ</strong></td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% endif %}
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     VI. RANKINGS
-═══════════════════════════════════════════════════════════ -->
-<div class="section page-break">
+<!-- ══ VI. RANKINGS ════════════════════════════════════════════════════════ -->
+<div class="section pb">
   <div class="section-title">VI. Rankings</div>
 
-  <div class="section-subtitle">Top 10 — Mayor faltante en importe</div>
+  <div class="section-sub">Top 10 — Mayor faltante en importe</div>
   <table>
-    <thead>
-      <tr>
-        <th>#</th><th>Producto</th><th>Categoría</th>
-        <th class="text-right">Importe diferencia</th>
-        <th class="text-right">% sobre faltantes</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>#</th><th>Producto</th><th>Categoría</th>
+      <th class="tr">Importe diferencia</th><th class="tr">% faltantes</th>
+    </tr></thead>
     <tbody>
-      {% for p in top_faltantes %}
-      <tr>
-        <td class="text-center">{{ loop.index }}</td>
-        <td>{{ p.producto_nombre }}</td>
-        <td>{{ p.categoria_nombre }}</td>
-        <td class="text-right neg">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
-        <td class="text-right">{{ p.pct_sobre_faltantes }}%</td>
-      </tr>
-      {% endfor %}
+    {% for p in top_faltantes %}
+    <tr>
+      <td class="tc">{{ loop.index }}</td>
+      <td>{{ p.producto_nombre }}</td>
+      <td>{{ p.categoria_nombre }}</td>
+      <td class="tr neg">${{ "%.2f"|format(p.inventariomesdetalle_difimporte|float) }}</td>
+      <td class="tr">{{ p.pct_sobre_faltantes }}%</td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
 
-  <div class="section-subtitle">Top 10 — Mayor valor de inventario físico</div>
+  <div class="section-sub">Top 10 — Mayor valor de inventario físico</div>
   <table>
-    <thead>
-      <tr>
-        <th>#</th><th>Producto</th><th>Categoría</th>
-        <th class="text-right">Stock físico</th>
-        <th class="text-right">Costo prom.</th>
-        <th class="text-right">Importe físico</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>#</th><th>Producto</th><th>Categoría</th>
+      <th class="tr">Stock físico</th><th class="tr">Costo prom.</th>
+      <th class="tr">Importe físico</th>
+    </tr></thead>
     <tbody>
-      {% for p in top_valor %}
-      <tr>
-        <td class="text-center">{{ loop.index }}</td>
-        <td>{{ p.producto_nombre }}</td>
-        <td>{{ p.categoria_nombre }}</td>
-        <td class="text-right">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
-        <td class="text-right">${{ "%.2f"|format(p.inventariomesdetalle_costopromedio|float) }}</td>
-        <td class="text-right"><strong>${{ "%.2f"|format(p.inventariomesdetalle_importefisico|float) }}</strong></td>
-      </tr>
-      {% endfor %}
+    {% for p in top_valor %}
+    <tr>
+      <td class="tc">{{ loop.index }}</td>
+      <td>{{ p.producto_nombre }}</td>
+      <td>{{ p.categoria_nombre }}</td>
+      <td class="tr mono">{{ "%.3f"|format(p.inventariomesdetalle_stockfisico|float) }}</td>
+      <td class="tr">${{ "%.2f"|format(p.inventariomesdetalle_costopromedio|float) }}</td>
+      <td class="tr"><strong>${{ "%.2f"|format(p.inventariomesdetalle_importefisico|float) }}</strong></td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
 </div>
 
 
-
-<!-- ═══════════════════════════════════════════════════════════
-     VI-B. ANÁLISIS DE TRANSFERENCIAS
-═══════════════════════════════════════════════════════════ -->
+<!-- ══ VII. TRANSFERENCIAS ═════════════════════════════════════════════════ -->
 {% if count_transferencias > 0 %}
-<div class="section no-break">
-  <div class="section-title">VI-B. Faltantes Ajustados por Transferencias</div>
+<div class="section pb nob">
+  <div class="section-title">VII. Faltantes Ajustados por Transferencias</div>
 
-  <p style="font-size:10px; line-height:1.7; color:#374151; margin-bottom:12px;">
+  <p style="font-size:9.5px;line-height:1.7;color:#374151;margin-bottom:12px;">
     Se identificaron <strong>{{ count_transferencias }}</strong> transferencia(s) confirmada(s)
-    entre almacenes por un importe total de <strong>${{ importe_transferencias }}</strong>.
-    Estos movimientos explican parte de los faltantes reportados inicialmente.
+    por un importe de <strong>${{ importe_transferencias }}</strong>.
+    Estos movimientos entre almacenes explican parte de los faltantes reportados.
   </p>
 
-  <!-- Resumen de ajuste -->
-  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom:16px;">
-    <div class="kpi-card danger">
-      <div class="kpi-label">Faltante bruto</div>
-      <div class="kpi-value danger">${{ faltante_bruto }}</div>
+  <div class="kpi-row kpi-row-3" style="margin-bottom:14px;">
+    <div class="kpi red">
+      <div class="kpi-lbl">Faltante bruto</div>
+      <div class="kpi-val red">${{ faltante_bruto }}</div>
       <div class="kpi-sub">Antes de ajuste</div>
     </div>
-    <div class="kpi-card warning">
-      <div class="kpi-label">Transferencias confirmadas</div>
-      <div class="kpi-value warning">${{ importe_transferencias }}</div>
+    <div class="kpi amber">
+      <div class="kpi-lbl">Transferencias confirmadas</div>
+      <div class="kpi-val amber">${{ importe_transferencias }}</div>
       <div class="kpi-sub">{{ pct_faltante_explicado }}% del faltante explicado</div>
     </div>
-    <div class="kpi-card {% if perdida_real|float > 0 %}danger{% else %}success{% endif %}">
-      <div class="kpi-label">Pérdida real estimada</div>
-      <div class="kpi-value {% if perdida_real|float > 0 %}danger{% else %}success{% endif %}">
+    <div class="kpi {% if perdida_real|float > 0 %}red{% else %}green{% endif %}">
+      <div class="kpi-lbl">Pérdida real estimada</div>
+      <div class="kpi-val {% if perdida_real|float > 0 %}red{% else %}green{% endif %}">
         ${{ perdida_real }}
       </div>
       <div class="kpi-sub">Faltante sin explicación</div>
     </div>
   </div>
 
-  <!-- Transferencias internas -->
   {% if transferencias_internas %}
-  <div class="section-subtitle">🔄 Transferencias internas (mismo almacén → otro almacén)</div>
+  <div class="section-sub">🔄 Transferencias internas</div>
   <table>
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th>Origen</th>
-        <th>Destino</th>
-        <th class="text-right">Cantidad</th>
-        <th class="text-right">Importe</th>
-        <th>Origen detección</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Producto</th><th>Categoría</th>
+      <th>Almacén origen</th><th>Almacén destino</th>
+      <th class="tr">Cantidad</th><th class="tr">Importe</th><th>Tipo detección</th>
+    </tr></thead>
     <tbody>
-      {% for t in transferencias_internas %}
-      <tr>
-        <td>{{ t.producto_nombre }}</td>
-        <td>{{ t.categoria_nombre }}</td>
-        <td>{{ t.almacen_origen_nombre }}</td>
-        <td>{{ t.almacen_destino_nombre }}</td>
-        <td class="text-right">{{ t.transferencia_cantidad }}</td>
-        <td class="text-right pos">${{ t.transferencia_importe }}</td>
-        <td>
-          {% if t.transferencia_origen == 'detectada' %}
-            <span style="color:#D97706; font-size:9px;">⚡ Detectada automáticamente</span>
-          {% else %}
-            <span style="color:#16A34A; font-size:9px;">✓ Registrada manualmente</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
+    {% for t in transferencias_internas %}
+    <tr>
+      <td>{{ t.producto_nombre }}</td>
+      <td>{{ t.categoria_nombre }}</td>
+      <td>{{ t.almacen_origen_nombre }}</td>
+      <td>{{ t.almacen_destino_nombre }}</td>
+      <td class="tr mono">{{ t.transferencia_cantidad }}</td>
+      <td class="tr pos">${{ t.transferencia_importe }}</td>
+      <td>
+        {% if t.transferencia_origen == 'detectada' %}
+          <span class="chip chip-auto">⚡ Automática</span>
+        {% else %}
+          <span class="chip chip-manual">✓ Manual</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% endif %}
 
-  <!-- Transferencias entre sucursales -->
   {% if transferencias_entre_suc %}
-  <div class="section-subtitle">🏢 Transferencias entre sucursales</div>
+  <div class="section-sub">🏢 Transferencias entre sucursales</div>
   <table>
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Categoría</th>
-        <th>Sucursal origen</th>
-        <th>Sucursal destino</th>
-        <th class="text-right">Cantidad</th>
-        <th class="text-right">Importe</th>
-      </tr>
-    </thead>
+    <thead><tr>
+      <th>Producto</th><th>Categoría</th>
+      <th>Origen</th><th>Destino</th>
+      <th class="tr">Cantidad</th><th class="tr">Importe</th>
+    </tr></thead>
     <tbody>
-      {% for t in transferencias_entre_suc %}
-      <tr>
-        <td>{{ t.producto_nombre }}</td>
-        <td>{{ t.categoria_nombre }}</td>
-        <td>{{ t.almacen_origen_nombre }}</td>
-        <td>{{ t.almacen_destino_nombre }}</td>
-        <td class="text-right">{{ t.transferencia_cantidad }}</td>
-        <td class="text-right pos">${{ t.transferencia_importe }}</td>
-      </tr>
-      {% endfor %}
+    {% for t in transferencias_entre_suc %}
+    <tr>
+      <td>{{ t.producto_nombre }}</td>
+      <td>{{ t.categoria_nombre }}</td>
+      <td>{{ t.almacen_origen_nombre }}</td>
+      <td>{{ t.almacen_destino_nombre }}</td>
+      <td class="tr mono">{{ t.transferencia_cantidad }}</td>
+      <td class="tr pos">${{ t.transferencia_importe }}</td>
+    </tr>
+    {% endfor %}
     </tbody>
   </table>
   {% endif %}
-
 </div>
 {% endif %}
 
-<!-- ═══════════════════════════════════════════════════════════
-     VII. CONCLUSIONES
-═══════════════════════════════════════════════════════════ -->
-<div class="section page-break">
-  <div class="section-title">VII. Conclusiones y Recomendaciones</div>
 
-  <div class="conclusion-item no-break">
-    <div class="conclusion-num">1</div>
-    <div class="conclusion-text">
-      <strong>Exactitud del inventario:</strong>
-      {{ tasa_exactitud }}% de los productos no presentaron diferencias.
+<!-- ══ VIII. CONCLUSIONES ═══════════════════════════════════════════════════ -->
+<div class="section pb">
+  <div class="section-title">{% if count_transferencias > 0 %}VIII{% else %}VII{% endif %}. Conclusiones y Recomendaciones</div>
+
+  <div class="concl nob">
+    <div class="concl-num">1</div>
+    <div class="concl-txt">
+      <strong>Exactitud:</strong> {{ tasa_exactitud }}% de los productos sin diferencias.
       {{ conclusion_exactitud }}
     </div>
   </div>
-  <div class="conclusion-item no-break">
-    <div class="conclusion-num">2</div>
-    <div class="conclusion-text">
+  <div class="concl nob">
+    <div class="concl-num">2</div>
+    <div class="concl-txt">
       <strong>Concentración de faltantes:</strong>
-      El {{ pct_top10_faltantes }}% del importe total de faltantes se concentra
-      en los 10 productos del ranking. {{ conclusion_concentracion }}
+      El {{ pct_top10_faltantes }}% del importe total se concentra en los 10 productos del ranking.
+      {{ conclusion_concentracion }}
     </div>
   </div>
-  <div class="conclusion-item no-break">
-    <div class="conclusion-num">3</div>
-    <div class="conclusion-text">
-      <strong>Tasa de revisión:</strong>
-      {{ tasa_revision }}% de los registros fueron marcados como revisados.
+  <div class="concl nob">
+    <div class="concl-num">3</div>
+    <div class="concl-txt">
+      <strong>Revisión:</strong> {{ tasa_revision }}% de los registros marcados como revisados.
       {{ conclusion_revision }}
     </div>
   </div>
-  <div class="conclusion-item no-break">
-    <div class="conclusion-num">4</div>
-    <div class="conclusion-text">
-      <strong>Reajustes:</strong>
-      Se aplicaron reajustes al {{ pct_reajustados }}% de los productos.
+  <div class="concl nob">
+    <div class="concl-num">4</div>
+    <div class="concl-txt">
+      <strong>Reajustes:</strong> {{ pct_reajustados }}% de los productos con reajuste.
       {{ conclusion_reajustes }}
     </div>
   </div>
-  <div class="conclusion-item no-break">
-    <div class="conclusion-num">5</div>
-    <div class="conclusion-text">
-      <strong>Aclaraciones:</strong>
-      El {{ pct_aclaradas }}% de las diferencias cuenta con aclaración registrada.
+  <div class="concl nob">
+    <div class="concl-num">5</div>
+    <div class="concl-txt">
+      <strong>Aclaraciones:</strong> {{ pct_aclaradas }}% de las diferencias con aclaración registrada.
       {{ conclusion_aclaraciones }}
     </div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════════════════
-     FOOTER
-═══════════════════════════════════════════════════════════ -->
+<!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
 <div class="footer">
-  Documento generado automáticamente por el sistema TALOS — Módulo de Generación de Reportes |
-  Inventario #{{ idinventariomes }} | Sucursal {{ idsucursal }} | {{ inventariomes_fecha }}
+  Sistema TALOS — Módulo de Generación de Reportes &nbsp;|&nbsp;
+  Inventario #{{ idinventariomes }} &nbsp;|&nbsp;
+  Sucursal {{ idsucursal }} &nbsp;|&nbsp;
+  {{ inventariomes_fecha }}
 </div>
 
 </body>

@@ -141,7 +141,7 @@ async def _run_report_pipeline(
 
         # 5. PDF con Playwright en thread separado
         pdf_path = _get_pdf_path(idinventariomes)
-        await asyncio.to_thread(run_pdf_async, html_content, pdf_path)
+        await run_pdf_async(html_content, pdf_path)
 
         print(f"[Pipeline] ✓ Reporte {idinventariomes} listo → {pdf_path}")
 

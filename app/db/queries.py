@@ -1,16 +1,6 @@
 """
 app/db/queries.py
-Queries ajustadas a los nombres REALES de columnas de talos_tecmty.
-
-Columnas confirmadas vía SHOW COLUMNS / SELECT real:
-  - producto.producto_nombre       (no 'nombre')
-  - producto.producto_baja
-  - producto.producto_rendimiento
-  - categoria.categoria_nombre     (no 'nombre')
-  - unidadmedida.unidadmedida_nombre
-  - inventariomesdetalle usa nombres completos con prefijo
-  - inventariomesdetalle_aclaracion
-  - inventariomesdetalle_categoria_aclaracion  (con guión bajo, confirmado)
+Queries usando vistas limpias + JOIN a tabla raw para fechas.
 """
 
 from sqlalchemy import text
@@ -20,28 +10,16 @@ from app.config import get_settings
 settings = get_settings()
 
 
-def _limit(n: int) -> str:
-    """Cláusula LIMIT compatible con MySQL y Oracle."""
-    if settings.is_oracle:
-        return f"FETCH FIRST {n} ROWS ONLY"
-    return f"LIMIT {n}"
-
-
-# ── Encabezado del inventario ────────────────────────────────────────────────
-
 QUERY_HEADER = text("""
     SELECT
         im.idinventariomes,
         im.idempresa,
         im.idsucursal,
         im.idalmacen,
-        im.idusuario,
         im.idauditor,
         im.inventariomes_fecha,
         im.inventariomes_version,
         im.inventariomes_estatus,
-        im.inventariomes_createdat,
-        im.inventariomes_updatedat,
         im.inventariomes_totalimportefisico,
         im.inventariomes_finalalimentos,
         im.inventariomes_finalbebidas,
@@ -49,72 +27,68 @@ QUERY_HEADER = text("""
         im.inventariomes_faltantes,
         im.inventariomes_sobrantes,
         im.inventariomes_total,
-        im.inventariomes_xls,
-        im.inventariomes_pdf,
-        im.inventariomes_xls_inicial,
-        im.inventariomes_pdf_inicial,
+        raw.inventariomes_createdat,
+        raw.inventariomes_updatedat,
+        raw.inventariomes_xls,
+        raw.inventariomes_pdf,
+        raw.inventariomes_xls_inicial,
+        raw.inventariomes_pdf_inicial,
+        raw.idusuario,
         a.almacen_nombre,
         a.almacen_encargado
-    FROM inventariomes im
-    LEFT JOIN almacen a ON a.idalmacen = im.idalmacen
+    FROM vw_inventariomes_limpio im
+    LEFT JOIN almacen      a   ON a.idalmacen       = im.idalmacen
+    LEFT JOIN inventariomes raw ON raw.idinventariomes = im.idinventariomes
     WHERE im.idinventariomes = :idinventariomes
 """)
 
-
-# ── Detalle de productos ─────────────────────────────────────────────────────
-# Nombres confirmados con SHOW COLUMNS y SELECT real sobre inventario 118889.
 
 QUERY_DETALLE = text("""
     SELECT
         imd.idinventariomesdetalle,
         imd.idinventariomes,
         imd.idproducto,
-
         p.producto_nombre,
         p.producto_baja,
         p.producto_rendimiento,
-        p.producto_visible,
-
+        p.producto_oculto,
+        p.producto_tipo,
         c.categoria_nombre,
         c.idcategoria,
         c.idcategoriapadre,
-
         um.unidadmedida_nombre,
-
-        imd.inventariomesdetalle_stockinicial,
-        imd.inventariomesdetalle_stockteorico,
-        imd.inventariomesdetalle_explosion,
-        imd.inventariomesdetalle_stockfisico,
-        imd.inventariomesdetalle_totalfisico,
-        imd.inventariomesdetalle_diferencia,
-
-        imd.inventariomesdetalle_ingresocompra,
-        imd.inventariomesdetalle_ingresorequisicion,
-        imd.inventariomesdetalle_egresorequisicion,
-        imd.inventariomesdetalle_egresoventa,
-        imd.inventariomesdetalle_reajuste,
-        imd.inventariomesdetalle_ingresoordentablajeria,
-        imd.inventariomesdetalle_egresoordentablajeria,
-        imd.inventariomesdetalle_egresodevolucion,
-
-        imd.inventariomesdetalle_costopromedio,
-        imd.inventariomesdetalle_difimporte,
-        imd.inventariomesdetalle_importefisico,
-
-        imd.inventariomesdetalle_revisada,
-        imd.inventariomesdetalle_aclaracion,
-        imd.inventariomesdetalle_categoria_aclaracion
-
-    FROM inventariomesdetalle imd
-    INNER JOIN producto     p  ON p.idproducto     = imd.idproducto
-    INNER JOIN categoria    c  ON c.idcategoria    = p.idcategoria
-    INNER JOIN unidadmedida um ON um.idunidadmedida = p.idunidadmedida
+        imd.stockinicial                     AS inventariomesdetalle_stockinicial,
+        imd.stockteorico_bd                  AS inventariomesdetalle_stockteorico,
+        imd.stockfisico                      AS inventariomesdetalle_stockfisico,
+        imd.diferencia_bd                    AS inventariomesdetalle_diferencia,
+        imd.ingresocompra                    AS inventariomesdetalle_ingresocompra,
+        imd.ingresorequisicion               AS inventariomesdetalle_ingresorequisicion,
+        imd.egresorequisicion                AS inventariomesdetalle_egresorequisicion,
+        imd.egresoventa                      AS inventariomesdetalle_egresoventa,
+        imd.reajuste                         AS inventariomesdetalle_reajuste,
+        imd.ingresoordentablajeria           AS inventariomesdetalle_ingresoordentablajeria,
+        imd.egresoordentablajeria            AS inventariomesdetalle_egresoordentablajeria,
+        imd.egresodevolucion                 AS inventariomesdetalle_egresodevolucion,
+        imd.costopromedio                    AS inventariomesdetalle_costopromedio,
+        imd.difimporte_bd                    AS inventariomesdetalle_difimporte,
+        imd.importefisico_bd                 AS inventariomesdetalle_importefisico,
+        0                                    AS inventariomesdetalle_revisada,
+        NULL                                 AS inventariomesdetalle_aclaracion,
+        NULL                                 AS inventariomesdetalle_categoria_aclaracion,
+        imd.flag_outlier,
+        imd.flag_costopromedio_cero,
+        imd.flag_stockteorico_no_cuadra,
+        imd.flag_fisico_cero_teorico_positivo
+    FROM vw_inventariomesdetalle_limpio imd
+    INNER JOIN vw_producto_limpio  p  ON p.idproducto     = imd.idproducto
+    INNER JOIN vw_categoria_limpia c  ON c.idcategoria    = p.idcategoria
+    INNER JOIN unidadmedida        um ON um.idunidadmedida = p.idunidadmedida
     WHERE imd.idinventariomes = :idinventariomes
+      AND imd.flag_outlier = 0
+      AND imd.flag_costopromedio_cero = 0
     ORDER BY c.categoria_nombre, p.producto_nombre
 """)
 
-
-# ── Inventarios del período (scheduler semanal) ──────────────────────────────
 
 QUERY_INVENTARIOS_PERIODO = text("""
     SELECT
@@ -124,15 +98,12 @@ QUERY_INVENTARIOS_PERIODO = text("""
         im.inventariomes_fecha,
         im.inventariomes_estatus,
         a.almacen_nombre
-    FROM inventariomes im
+    FROM vw_inventariomes_limpio im
     LEFT JOIN almacen a ON a.idalmacen = im.idalmacen
-    WHERE im.inventariomes_estatus = 'finalizado'
-      AND DATE(im.inventariomes_fecha) BETWEEN :fecha_inicio AND :fecha_fin
+    WHERE DATE(im.inventariomes_fecha) BETWEEN :fecha_inicio AND :fecha_fin
     ORDER BY im.idsucursal, im.inventariomes_fecha
 """)
 
-
-# ── Inventarios recientes con movimientos reales (dashboard) ─────────────────
 
 QUERY_INVENTARIOS_RECIENTES = text("""
     SELECT
@@ -145,11 +116,12 @@ QUERY_INVENTARIOS_RECIENTES = text("""
         im.inventariomes_sobrantes,
         im.inventariomes_estatus,
         COUNT(imd.idinventariomesdetalle) AS total_productos
-    FROM inventariomes im
+    FROM vw_inventariomes_limpio im
     JOIN almacen a ON a.idalmacen = im.idalmacen
-    JOIN inventariomesdetalle imd ON imd.idinventariomes = im.idinventariomes
+    JOIN vw_inventariomesdetalle_limpio imd
+        ON imd.idinventariomes = im.idinventariomes
+        AND imd.flag_outlier = 0
     WHERE im.inventariomes_totalimportefisico > 1000
-      AND imd.inventariomesdetalle_stockteorico > 0
     GROUP BY
         im.idinventariomes,
         im.inventariomes_fecha,
@@ -161,9 +133,6 @@ QUERY_INVENTARIOS_RECIENTES = text("""
         im.inventariomes_estatus
     ORDER BY im.inventariomes_fecha DESC
 """)
-
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
 
 
 async def fetch_header(db: AsyncSession, idinventariomes: int) -> dict:

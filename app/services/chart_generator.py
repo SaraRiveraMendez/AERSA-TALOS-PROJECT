@@ -229,51 +229,100 @@ def chart_top10_faltantes(data: list[dict]) -> str:
     return _b64(fig)
 
 
-# ── 5. Donut — Revisados vs Pendientes ───────────────────────────────────────
-def chart_donut_revision(data: dict) -> str:
-    revisados = data.get("revisados", 0)
-    pendientes = data.get("pendientes", 0)
-    total = revisados + pendientes or 1
+# ── 5. Barras agrupadas — Faltantes y Sobrantes por categoría ───────────────
+def chart_barras_categoria(data: dict) -> str:
+    """
+    Reemplaza el donut de revisión.
+    Muestra faltantes y sobrantes por categoría en barras agrupadas.
+    data = {
+        "categorias": ["Alimentos", "Bebidas", "Misceláneos"],
+        "faltantes":  [200.0, 8500.0, 0.0],
+        "sobrantes":  [100.0, 12000.0, 0.0],
+    }
+    """
+    cats = data.get("categorias", [])
+    falt = data.get("faltantes", [])
+    sobr = data.get("sobrantes", [])
 
-    fig, ax = plt.subplots(figsize=(5.5, 4.5))
-    vals = [revisados, pendientes]
-    cols = [VERDE, NARANJA]
-    labs = [f"Revisados\n{revisados}", f"Pendientes\n{pendientes}"]
+    if not cats or (sum(falt) == 0 and sum(sobr) == 0):
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.text(
+            0.5,
+            0.5,
+            "Sin diferencias por categoría",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=12,
+            color=GRIS,
+        )
+        return _b64(fig)
 
-    wedges, _, autotexts = ax.pie(
-        vals,
-        colors=cols,
-        autopct="%1.0f%%",
-        startangle=90,
-        wedgeprops={"linewidth": 2.5, "edgecolor": BLANCO, "width": 0.55},
-        pctdistance=0.8,
+    x = np.arange(len(cats))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    bars_f = ax.bar(
+        x - width / 2,
+        falt,
+        width,
+        label="Faltantes",
+        color=ROJO,
+        alpha=0.85,
+        edgecolor=BLANCO,
+        zorder=3,
     )
-    for at in autotexts:
-        at.set_fontsize(11)
-        at.set_fontweight("bold")
+    bars_s = ax.bar(
+        x + width / 2,
+        sobr,
+        width,
+        label="Sobrantes",
+        color=VERDE,
+        alpha=0.85,
+        edgecolor=BLANCO,
+        zorder=3,
+    )
 
-    ax.text(
-        0,
-        0,
-        f"{total}\nproductos",
-        ha="center",
-        va="center",
-        fontsize=12,
+    # Etiquetas encima de cada barra
+    for bar in bars_f:
+        h = bar.get_height()
+        if h > 0:
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                h + max(max(falt), max(sobr)) * 0.01,
+                f"${h:,.0f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                color=ROJO,
+                fontweight="bold",
+            )
+    for bar in bars_s:
+        h = bar.get_height()
+        if h > 0:
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                h + max(max(falt), max(sobr)) * 0.01,
+                f"${h:,.0f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                color=VERDE,
+                fontweight="bold",
+            )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(cats, fontsize=10)
+    ax.set_ylabel("Importe ($)", fontsize=10, color=GRIS)
+    ax.set_title(
+        "Faltantes y Sobrantes por categoría",
+        fontsize=13,
         fontweight="bold",
         color="#1E293B",
     )
-    ax.legend(
-        wedges,
-        labs,
-        loc="lower center",
-        bbox_to_anchor=(0.5, -0.1),
-        ncol=2,
-        fontsize=9,
-        frameon=False,
-    )
-    ax.set_title(
-        "Estado de revisión", fontsize=13, fontweight="bold", color="#1E293B", pad=12
-    )
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(_money))
+    ax.legend(fontsize=9, frameon=False, loc="upper right")
+    ax.set_ylim(0, max(max(falt), max(sobr)) * 1.25)
     fig.tight_layout()
     return _b64(fig)
 
@@ -331,6 +380,6 @@ def generate_all_charts(chart_data: dict) -> dict[str, str]:
         "barras": chart_bar_faltantes_sobrantes(chart_data["bar_faltantes_sobrantes"]),
         "histograma": chart_histograma_diferencias(chart_data["hist_difimporte"]),
         "top10": chart_top10_faltantes(chart_data["top10_faltantes"]),
-        "donut": chart_donut_revision(chart_data["donut_revision"]),
+        "donut": chart_barras_categoria(chart_data["barras_categoria"]),
         "heatmap": chart_heatmap_movimientos(chart_data["heatmap_movimientos"]),
     }

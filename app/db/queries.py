@@ -72,9 +72,9 @@ QUERY_DETALLE = text("""
         imd.costopromedio                    AS inventariomesdetalle_costopromedio,
         imd.difimporte_bd                    AS inventariomesdetalle_difimporte,
         imd.importefisico_bd                 AS inventariomesdetalle_importefisico,
-        0                                    AS inventariomesdetalle_revisada,
-        NULL                                 AS inventariomesdetalle_aclaracion,
-        NULL                                 AS inventariomesdetalle_categoria_aclaracion,
+        raw.inventariomesdetalle_revisada,
+        raw.inventariomesdetalle_aclaracion,
+        raw.inventariomesdetalle_categoria_aclaracion,
         imd.flag_outlier,
         imd.flag_costopromedio_cero,
         imd.flag_stockteorico_no_cuadra,
@@ -83,6 +83,7 @@ QUERY_DETALLE = text("""
     INNER JOIN vw_producto_limpio  p  ON p.idproducto     = imd.idproducto
     INNER JOIN vw_categoria_limpia c  ON c.idcategoria    = p.idcategoria
     INNER JOIN unidadmedida        um ON um.idunidadmedida = p.idunidadmedida
+    LEFT JOIN inventariomesdetalle raw ON raw.idinventariomesdetalle = imd.idinventariomesdetalle
     WHERE imd.idinventariomes = :idinventariomes
       AND imd.flag_outlier = 0
       AND imd.flag_costopromedio_cero = 0

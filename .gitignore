@@ -4,4 +4,5 @@ talos_tecmty.sql
 .env
 .venv/
 storage/
+sql/
 

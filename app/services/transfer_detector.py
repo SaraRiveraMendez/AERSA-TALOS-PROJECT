@@ -54,28 +54,28 @@ QUERY_DIFERENCIAS_POR_FECHA = text("""
         p.producto_nombre,
         p.idcategoria,
         c.categoria_nombre,
-        imd.inventariomesdetalle_diferencia     AS diferencia,
-        imd.inventariomesdetalle_costopromedio  AS costopromedio,
-        imd.inventariomesdetalle_difimporte     AS difimporte,
-        imd.inventariomesdetalle_stockfisico    AS stockfisico
-    FROM inventariomes im
-    JOIN almacen              a   ON a.idalmacen    = im.idalmacen
-    JOIN inventariomesdetalle imd ON imd.idinventariomes = im.idinventariomes
-    JOIN producto             p   ON p.idproducto   = imd.idproducto
-    JOIN categoria            c   ON c.idcategoria  = p.idcategoria
+        imd.diferencia_bd                        AS diferencia,
+        imd.costopromedio                        AS costopromedio,
+        imd.difimporte_bd                        AS difimporte,
+        imd.stockfisico                          AS stockfisico
+    FROM vw_inventariomes_limpio im
+    JOIN almacen                        a   ON a.idalmacen    = im.idalmacen
+    JOIN vw_inventariomesdetalle_limpio imd ON imd.idinventariomes = im.idinventariomes
+    JOIN vw_producto_limpio             p   ON p.idproducto   = imd.idproducto
+    JOIN vw_categoria_limpia            c   ON c.idcategoria  = p.idcategoria
     WHERE im.idsucursal = :idsucursal
       AND DATE(im.inventariomes_fecha) = :fecha
-      AND im.inventariomes_estatus = 'finalizado'
-      AND ABS(imd.inventariomesdetalle_diferencia) > :diferencia_minima
+      AND imd.flag_outlier = 0
+      AND imd.flag_costopromedio_cero = 0
+      AND ABS(imd.diferencia_bd) > :diferencia_minima
     ORDER BY imd.idproducto, im.idalmacen
 """)
 
 # Obtiene las dos fechas de cierre más recientes de una sucursal
 QUERY_CIERRES_RECIENTES = text("""
     SELECT DISTINCT DATE(inventariomes_fecha) AS fecha
-    FROM inventariomes
+    FROM vw_inventariomes_limpio
     WHERE idsucursal = :idsucursal
-      AND inventariomes_estatus = 'finalizado'
     ORDER BY fecha DESC
     LIMIT :n
 """)

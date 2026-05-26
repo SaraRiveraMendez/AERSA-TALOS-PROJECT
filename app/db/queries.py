@@ -29,8 +29,7 @@ def _limit(n: int) -> str:
 
 # ── Encabezado del inventario ────────────────────────────────────────────────
 
-QUERY_HEADER = text(
-    """
+QUERY_HEADER = text("""
     SELECT
         im.idinventariomes,
         im.idempresa,
@@ -59,15 +58,13 @@ QUERY_HEADER = text(
     FROM inventariomes im
     LEFT JOIN almacen a ON a.idalmacen = im.idalmacen
     WHERE im.idinventariomes = :idinventariomes
-"""
-)
+""")
 
 
 # ── Detalle de productos ─────────────────────────────────────────────────────
 # Nombres confirmados con SHOW COLUMNS y SELECT real sobre inventario 118889.
 
-QUERY_DETALLE = text(
-    """
+QUERY_DETALLE = text("""
     SELECT
         imd.idinventariomesdetalle,
         imd.idinventariomes,
@@ -76,8 +73,7 @@ QUERY_DETALLE = text(
         p.producto_nombre,
         p.producto_baja,
         p.producto_rendimiento,
-        p.producto_oculto,
-        p.producto_tipo,
+        p.producto_visible,
 
         c.categoria_nombre,
         c.idcategoria,
@@ -87,7 +83,9 @@ QUERY_DETALLE = text(
 
         imd.inventariomesdetalle_stockinicial,
         imd.inventariomesdetalle_stockteorico,
+        imd.inventariomesdetalle_explosion,
         imd.inventariomesdetalle_stockfisico,
+        imd.inventariomesdetalle_totalfisico,
         imd.inventariomesdetalle_diferencia,
 
         imd.inventariomesdetalle_ingresocompra,
@@ -113,14 +111,12 @@ QUERY_DETALLE = text(
     INNER JOIN unidadmedida um ON um.idunidadmedida = p.idunidadmedida
     WHERE imd.idinventariomes = :idinventariomes
     ORDER BY c.categoria_nombre, p.producto_nombre
-"""
-)
+""")
 
 
 # ── Inventarios del período (scheduler semanal) ──────────────────────────────
 
-QUERY_INVENTARIOS_PERIODO = text(
-    """
+QUERY_INVENTARIOS_PERIODO = text("""
     SELECT
         im.idinventariomes,
         im.idsucursal,
@@ -133,14 +129,12 @@ QUERY_INVENTARIOS_PERIODO = text(
     WHERE im.inventariomes_estatus = 'finalizado'
       AND DATE(im.inventariomes_fecha) BETWEEN :fecha_inicio AND :fecha_fin
     ORDER BY im.idsucursal, im.inventariomes_fecha
-"""
-)
+""")
 
 
 # ── Inventarios recientes con movimientos reales (dashboard) ─────────────────
 
-QUERY_INVENTARIOS_RECIENTES = text(
-    """
+QUERY_INVENTARIOS_RECIENTES = text("""
     SELECT
         im.idinventariomes,
         im.inventariomes_fecha,
@@ -166,8 +160,7 @@ QUERY_INVENTARIOS_RECIENTES = text(
         im.inventariomes_sobrantes,
         im.inventariomes_estatus
     ORDER BY im.inventariomes_fecha DESC
-"""
-)
+""")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

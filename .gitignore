@@ -5,4 +5,5 @@ talos_tecmty.sql
 .venv/
 storage/
 sql/
-
+__pycache__/
+*.py[cod]

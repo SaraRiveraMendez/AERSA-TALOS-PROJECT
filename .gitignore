@@ -26,3 +26,5 @@ talos-server/__pycache__/
 
 talos-server/rag/.rag-venv
 talos-server/rag/.rag_env
+talos-server/reportes/*.pdf
+talos-server/logs/

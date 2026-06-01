@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TALOS — Sistema de Auditoría</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f1e7;
+    --bg-soft: #fbf8f0;
+    --surface: rgba(255, 252, 243, 0.86);
+    --surface-solid: #fffaf0;
+    --surface2: #f1eadc;
+    --surface3: #e8decb;
+    --border: rgba(43, 82, 62, 0.14);
+    --border2: rgba(43, 82, 62, 0.28);
+    --text: #24352b;
+    --text2: #607066;
+    --text3: #8b998f;
+    --accent: #2f6b4f;
+    --accent2: #7fa46e;
+    --accent3: #dfe8d4;
+    --cream: #fff7e6;
+    --red: #a95046;
+    --green: #2f7a57;
+    --blue: #466f82;
+    --shadow: 0 18px 55px rgba(39, 67, 51, 0.10);
+    --shadow-soft: 0 10px 30px rgba(39, 67, 51, 0.07);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --serif: 'Libre Baskerville', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      radial-gradient(circle at 16% 18%, rgba(127,164,110,.22), transparent 28%),
+      radial-gradient(circle at 85% 8%, rgba(47,107,79,.12), transparent 30%),
+      linear-gradient(135deg, #fbf7ee 0%, var(--bg) 48%, #eef3e8 100%);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .30;
+    background-image:
+      linear-gradient(rgba(47,107,79,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(47,107,79,.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(to bottom, black 0%, rgba(0,0,0,.85) 55%, transparent 100%);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    min-height: 72px;
+    background: rgba(255, 250, 240, .78);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(18px);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--accent);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .logo span {
+    font-family: var(--sans);
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+
+  .status-bar {
+    display: flex;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .status-bar > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255,255,255,.45);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+    box-shadow: 0 0 0 4px rgba(139,153,143,.12);
+  }
+  .status-dot.ok { background: var(--green); box-shadow: 0 0 0 4px rgba(47,122,87,.12); }
+  .status-dot.err { background: var(--red); box-shadow: 0 0 0 4px rgba(169,80,70,.12); }
+
+  .tabs {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 250, 240, .62);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    padding: 10px 28px 0;
+    gap: 8px;
+    backdrop-filter: blur(14px);
+    position: relative;
+    z-index: 2;
+  }
+
+  .tab {
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: .02em;
+    font-weight: 650;
+    padding: 13px 18px 14px;
+    cursor: pointer;
+    color: var(--text2);
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all .18s ease;
+    background: transparent;
+    border-radius: 16px 16px 0 0;
+    white-space: nowrap;
+  }
+
+  .tab:hover { color: var(--accent); background: rgba(255,255,255,.42); }
+  .tab.active {
+    color: var(--accent);
+    background: var(--surface-solid);
+    border-color: var(--border);
+    box-shadow: 0 -8px 22px rgba(47,107,79,.06);
+  }
+
+  .main { flex: 1; overflow: hidden; display: flex; position: relative; z-index: 1; }
+  .panel { display: none; flex: 1; overflow: hidden; }
+  .panel.active { display: flex; }
+
+  .chat-layout, .pdf-layout { display: flex; width: 100%; height: 100%; }
+
+  .chat-sidebar, .pdf-sidebar {
+    width: 290px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: rgba(255, 250, 240, .62);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+    backdrop-filter: blur(14px);
+  }
+
+  .sidebar-section, .pdf-controls, .admin-card, .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .sidebar-section { padding: 18px; }
+
+  .sidebar-section h3, .section-title, .form-field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .sidebar-section h3,
+  .section-title {
+    font-size: 11.5px;
+    letter-spacing: .13em;
+  }
+
+  .sidebar-section h3 { margin-bottom: 14px; }
+  .option-group { display: flex; flex-direction: column; gap: 9px; }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.42);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all .18s ease;
+    text-align: left;
+  }
+
+  .option-btn:hover { border-color: var(--border2); color: var(--accent); transform: translateY(-1px); }
+  .option-btn.selected {
+    border-color: rgba(47,107,79,.36);
+    background: linear-gradient(135deg, rgba(223,232,212,.9), rgba(255,247,230,.85));
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.45);
+  }
+
+  .option-btn .icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--accent3);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .slider-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .slider-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); }
+  .slider-val { color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+  .chat-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .chat-messages::-webkit-scrollbar, .chat-sidebar::-webkit-scrollbar, .trans-layout::-webkit-scrollbar, .admin-layout::-webkit-scrollbar { width: 8px; }
+  .chat-messages::-webkit-scrollbar-track, .chat-sidebar::-webkit-scrollbar-track, .trans-layout::-webkit-scrollbar-track, .admin-layout::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb, .chat-sidebar::-webkit-scrollbar-thumb, .trans-layout::-webkit-scrollbar-thumb, .admin-layout::-webkit-scrollbar-thumb { background: rgba(47,107,79,.18); border-radius: 999px; }
+
+  .message { display: flex; flex-direction: column; gap: 8px; max-width: 840px; }
+  .message.user { align-self: flex-end; align-items: flex-end; }
+  .message.assistant { align-self: flex-start; }
+  .msg-label { font-family: var(--mono); font-size: 10px; letter-spacing: .11em; color: var(--text3); text-transform: uppercase; }
+
+  .msg-bubble {
+    padding: 16px 18px;
+    border-radius: 20px;
+    line-height: 1.68;
+    font-size: 14px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .message.user .msg-bubble {
+    background: linear-gradient(135deg, #2f6b4f, #557c5f);
+    color: #fffdf7;
+    border-top-right-radius: 6px;
+  }
+
+  .message.assistant .msg-bubble {
+    background: rgba(255,250,240,.88);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-top-left-radius: 6px;
+  }
+
+  .msg-context {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    background: rgba(241,234,220,.72);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 10px 12px;
+    max-height: 82px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: max-height .2s ease;
+  }
+  .msg-context.expanded { max-height: 300px; overflow-y: auto; }
+  .msg-context-label { color: var(--accent); margin-bottom: 4px; }
+
+  .thinking {
+    display: flex;
+    gap: 5px;
+    padding: 16px 18px;
+    background: rgba(255,250,240,.88);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    align-items: center;
+  }
+  .thinking span { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 1.2s infinite; opacity: .32; }
+  .thinking span:nth-child(2) { animation-delay: .2s; }
+  .thinking span:nth-child(3) { animation-delay: .4s; }
+  @keyframes pulse { 0%,100%{opacity:.28; transform:scale(1)} 50%{opacity:1; transform:scale(1.3)} }
+
+  .chat-input-area {
+    padding: 18px 28px 22px;
+    border-top: 1px solid var(--border);
+    background: rgba(255,250,240,.78);
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    backdrop-filter: blur(16px);
+  }
+
+  .chat-input-area textarea, .form-field input, .form-field select {
+    background: rgba(255,255,255,.68);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 12px 14px;
+    outline: none;
+    transition: all .18s ease;
+  }
+
+  .chat-input-area textarea {
+    flex: 1;
+    resize: none;
+    min-height: 48px;
+    max-height: 120px;
+    line-height: 1.5;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+  }
+  .chat-input-area textarea:focus, .form-field input:focus, .form-field select:focus { border-color: rgba(47,107,79,.45); box-shadow: 0 0 0 4px rgba(47,107,79,.08); }
+  .chat-input-area textarea::placeholder { color: var(--text3); }
+
+  .send-btn, .btn {
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    cursor: pointer;
+    border: none;
+    transition: all .18s ease;
+    white-space: nowrap;
+  }
+  .send-btn {
+    background: var(--accent);
+    color: #fffdf7;
+    padding: 0 20px;
+    height: 48px;
+    box-shadow: 0 12px 24px rgba(47,107,79,.18);
+  }
+  .send-btn:hover, .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.04); }
+  .send-btn:disabled { background: var(--surface3); color: var(--text3); cursor: not-allowed; box-shadow: none; }
+
+  .pdf-sidebar { width: 305px; }
+  .pdf-controls { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .pdf-viewer {
+    flex: 1;
+    background: rgba(255,250,240,.42);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .pdf-viewer iframe { width: 100%; height: 100%; border: 1px solid var(--border); border-radius: 22px; background: white; box-shadow: var(--shadow); }
+  .pdf-placeholder {
+    text-align: center;
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px dashed var(--border2);
+    border-radius: 28px;
+    padding: 46px 58px;
+    box-shadow: var(--shadow-soft);
+  }
+  .pdf-placeholder .big {
+    width: 58px; height: 58px;
+    border-radius: 20px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--accent3), var(--cream));
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 28px; font-weight: 700;
+  }
+
+  .admin-layout, .trans-layout {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .admin-layout { max-width: 1040px; }
+  .admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .admin-card { padding: 22px; gap: 14px; }
+  .admin-card h3 {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .admin-card p { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+  .section-title {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+    width: 100%;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 7px; }
+  .form-field input, .form-field select { min-width: 140px; font-family: var(--sans); }
+
+  .btn { padding: 10px 18px; }
+  .btn-primary { background: var(--accent); color: #fffdf7; box-shadow: 0 10px 22px rgba(47,107,79,.16); }
+  .btn-secondary { background: rgba(255,255,255,.52); color: var(--accent); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--border2); background: #fff; }
+  .btn-green { background: rgba(47,122,87,.1); color: var(--green); border: 1px solid rgba(47,122,87,.22); }
+  .btn-green:hover { background: rgba(47,122,87,.16); }
+  .btn-red { background: rgba(169,80,70,.1); color: var(--red); border: 1px solid rgba(169,80,70,.22); }
+  .btn-red:hover { background: rgba(169,80,70,.16); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    gap: 16px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .val { color: var(--accent); font-weight: 600; }
+
+  .trans-header { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .table-wrap { overflow: hidden; }
+  .table-wrap table { width: 100%; border-collapse: collapse; }
+  .table-wrap th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: rgba(241,234,220,.70);
+  }
+  .table-wrap td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text2);
+    vertical-align: middle;
+    background: rgba(255,255,255,.28);
+  }
+  .table-wrap tr:last-child td { border-bottom: none; }
+  .table-wrap tr:hover td { background: rgba(223,232,212,.36); }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .05em;
+    font-weight: 600;
+  }
+  .badge-green { background: rgba(47,122,87,.12); color: var(--green); }
+  .badge-yellow { background: rgba(127,164,110,.18); color: #5f774c; }
+  .badge-red { background: rgba(169,80,70,.12); color: var(--red); }
+  .badge-blue { background: rgba(70,111,130,.12); color: var(--blue); }
+
+  .empty-state { padding: 42px; text-align: center; color: var(--text3); font-family: var(--sans); font-size: 13px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: rgba(255,250,240,.94);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 14px 18px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    z-index: 1000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .25s ease;
+    max-width: 360px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 4px solid var(--green); }
+  .toast.error { border-left: 4px solid var(--red); }
+  .toast.info { border-left: 4px solid var(--accent2); }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(47,107,79,.14);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; height: auto; min-height: 100vh; }
+    header { align-items: flex-start; gap: 12px; flex-direction: column; padding: 18px; }
+    .tabs { overflow-x: auto; padding-left: 18px; padding-right: 18px; }
+    .main, .panel.active, .chat-layout, .pdf-layout { min-height: 720px; }
+    .chat-sidebar, .pdf-sidebar { width: 250px; padding: 16px; }
+    .admin-grid { grid-template-columns: 1fr; }
+    .trans-layout, .admin-layout, .chat-messages { padding: 18px; }
+  }
+</style>
+
+<style>
+  /* Iconos lineales heredados del diseño base */
+  .lucide-icon {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tab .lucide-icon {
+    width: 14px;
+    height: 14px;
+    opacity: .72;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+
+  .tab:hover .lucide-icon,
+  .tab.active .lucide-icon {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+
+  .option-btn .lucide-icon {
+    width: 17px;
+    height: 17px;
+    color: var(--accent);
+    opacity: .82;
+    margin-right: 2px;
+  }
+
+  .option-btn:hover .lucide-icon,
+  .option-btn.selected .lucide-icon {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">TALOS <span>Copiloto de auditoría de inventario</span></div>
+  <div class="status-bar">
+    <span><span class="status-dot" id="rag-dot"></span><span id="rag-status">RAG API</span></span>
+    <span><span class="status-dot" id="rep-dot"></span><span id="rep-status">Reports API</span></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('chat')">
+    <svg class="lucide-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Copiloto RAG
+  </button>
+  <button class="tab" onclick="switchTab('pdf')">
+    <svg class="lucide-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Reportes PDF
+  </button>
+  <button class="tab" onclick="switchTab('admin')">
+    <svg class="lucide-icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+    Administrador
+  </button>
+  <button class="tab" onclick="switchTab('trans')">
+    <svg class="lucide-icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Transferencias
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- ── CHAT TAB ── -->
+  <div class="panel active" id="panel-chat">
+    <div class="chat-layout">
+      <div class="chat-sidebar">
+        <div class="sidebar-section">
+          <h3>Fuente de datos</h3>
+          <div class="option-group">
+            <button class="option-btn selected" data-col="reportes" onclick="selectCol(this)">
+              <svg class="lucide-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Solo PDF
+            </button>
+            <button class="option-btn" data-col="inventario" onclick="selectCol(this)">
+              <svg class="lucide-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              Solo DB
+            </button>
+            <button class="option-btn" data-col="ambas" onclick="selectCol(this)">
+              <svg class="lucide-icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Ambas
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Contexto (top_k)</h3>
+          <div class="slider-wrap">
+            <div class="slider-label">
+              <span>Fragmentos</span>
+              <span class="slider-val" id="topk-val">3</span>
+            </div>
+            <input type="range" min="1" max="10" value="3" id="topk-slider"
+              oninput="document.getElementById('topk-val').textContent=this.value">
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3>Sugerencias</h3>
+          <div class="option-group">
+            <button class="option-btn" onclick="setQuestion('¿Cuáles son los 3 productos con mayor faltante?')">
+              <span class="icon">01</span> Top faltantes
+            </button>
+            <button class="option-btn" onclick="setQuestion('¿Cuál es el balance neto y el resumen ejecutivo del inventario?')">
+              <span class="icon">02</span> Balance neto
+            </button>
+            <button class="option-btn" onclick="setQuestion('¿Qué productos outliers detectó la auditoría?')">
+              <span class="icon">03</span> Outliers
+            </button>
+            <button class="option-btn" onclick="setQuestion('¿Qué recomendaciones hace el reporte?')">
+              <span class="icon">04</span> Recomendaciones
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-main">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message assistant">
+            <div class="msg-label">TALOS RAG</div>
+            <div class="msg-bubble">
+              Listo para revisar inventarios. Puedes preguntar por faltantes, sobrantes, outliers, recomendaciones o evidencias recuperadas del reporte de auditoría.
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <textarea id="chat-input" placeholder="Escribe tu pregunta sobre el inventario..."
+            rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PDF TAB ── -->
+  <div class="panel" id="panel-pdf">
+    <div class="pdf-layout">
+      <div class="pdf-sidebar">
+        <div class="section-title">Gestión de Reportes</div>
+
+        <div class="pdf-controls">
+          <div class="form-field">
+            <label>ID Inventario</label>
+            <input type="number" id="pdf-inv-id" placeholder="ej. 118889" value="118889">
+          </div>
+
+          <button class="btn btn-primary" onclick="loadReport()">Ver reporte</button>
+          <button class="btn btn-secondary" onclick="downloadReport()">Descargar PDF</button>
+          <button class="btn btn-secondary" onclick="generateReport()">Generar nuevo</button>
+        </div>
+
+        <div id="report-status-box" style="display:none; margin-top:8px;">
+          <div class="stat-row">
+            <span>Estado</span>
+            <span class="val" id="report-status-val">—</span>
+          </div>
+        </div>
+
+        <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);">
+          <div class="section-title">Colecciones Milvus</div>
+          <div id="milvus-stats">
+            <div class="stat-row"><span>inventario</span><span class="val" id="stat-inv">—</span></div>
+            <div class="stat-row"><span>reportes</span><span class="val" id="stat-rep">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdf-viewer" id="pdf-viewer">
+        <div class="pdf-placeholder">
+          <div class="big">T</div>
+          <div>Ingresa un ID de inventario<br>y haz clic en "Ver reporte"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN TAB ── -->
+  <div class="panel" id="panel-admin">
+    <div class="admin-layout">
+      <div class="section-title">Panel de Administración</div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>Reindexar Base de Datos</h3>
+          <p>Extrae los registros más recientes de MySQL con discrepancias y actualiza los embeddings en Milvus.</p>
+          <div class="form-field">
+            <label>Días hacia atrás</label>
+            <input type="number" id="admin-days" value="90" min="1" max="365" style="width:100px">
+          </div>
+          <div class="form-field">
+            <label>Límite de registros</label>
+            <input type="number" id="admin-limit" value="5000" min="100" max="50000" style="width:120px">
+          </div>
+          <button class="btn btn-primary" onclick="reindexDB()">Reindexar DB</button>
+          <div id="admin-db-result" style="font-family:var(--mono);font-size:11px;color:var(--text3);"></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Reindexar PDF</h3>
+          <p>Procesa un reporte PDF y actualiza sus embeddings en la colección "reportes" de Milvus.</p>
+          <div class="form-field">
+            <label>Ruta del PDF en el servidor</label>
+            <input type="text" id="admin-pdf-path" placeholder="/home/.../reportes/reporte_118889.pdf" style="width:100%;font-size:11px;">
+          </div>
+          <button class="btn btn-primary" onclick="reindexPDF()">Reindexar PDF</button>
+          <div id="admin-pdf-result" style="font-family:var(--mono);font-size:11px;color:var(--text3);"></div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Estado del Sistema</h3>
+          <p>Conexiones activas y estadísticas de las colecciones vectoriales.</p>
+          <button class="btn btn-secondary" onclick="refreshStatus()">Actualizar</button>
+          <div>
+            <div class="stat-row"><span>RAG API</span><span class="val" id="admin-rag">—</span></div>
+            <div class="stat-row"><span>Reports API</span><span class="val" id="admin-rep">—</span></div>
+            <div class="stat-row"><span>Docs inventario</span><span class="val" id="admin-inv-docs">—</span></div>
+            <div class="stat-row"><span>Docs reportes</span><span class="val" id="admin-rep-docs">—</span></div>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3>Generar Reporte</h3>
+          <p>Genera el PDF de auditoría para un inventario específico. Corre en background.</p>
+          <div class="form-field">
+            <label>ID Inventario</label>
+            <input type="number" id="admin-gen-id" placeholder="ej. 118889">
+          </div>
+          <button class="btn btn-primary" onclick="adminGenerateReport()">Generar</button>
+          <div id="admin-gen-result" style="font-family:var(--mono);font-size:11px;color:var(--text3);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRANSFERENCIAS TAB ── -->
+  <div class="panel" id="panel-trans">
+    <div class="trans-layout">
+      <div class="section-title">Sistema de Transferencias</div>
+
+      <div class="trans-header">
+        <div class="form-field">
+          <label>ID Inventario</label>
+          <input type="number" id="trans-inv-id" placeholder="ej. 118889" value="118889">
+        </div>
+        <button class="btn btn-primary" onclick="loadTransferencias()">Cargar transferencias</button>
+
+        <div style="flex:1"></div>
+
+        <div class="form-field">
+          <label>ID Sucursal</label>
+          <input type="number" id="detect-suc-id" placeholder="ej. 2769">
+        </div>
+        <div class="form-field">
+          <label>ID Empresa</label>
+          <input type="number" id="detect-emp-id" placeholder="ej. 956">
+        </div>
+        <button class="btn btn-secondary" onclick="detectarTransferencias()">
+          Detectar automáticas
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Producto</th>
+              <th>Origen / Destino</th>
+              <th>Cantidad</th>
+              <th>Importe</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Confianza</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="trans-tbody">
+            <tr><td colspan="9" class="empty-state">Ingresa un ID de inventario y haz clic en "Cargar transferencias"</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detección result -->
+      <div id="detect-result" style="display:none;">
+        <div class="section-title" style="margin-top:8px;">Transferencias Detectadas</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Almacén origen</th>
+                <th>Almacén destino</th>
+                <th>Cantidad</th>
+                <th>Importe</th>
+                <th>Confianza</th>
+              </tr>
+            </thead>
+            <tbody id="detect-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────
+const RAG_API = 'http://34.71.181.192:8000';
+const REP_API = 'http://34.71.181.192:8001';
+const API_KEY = 'talos-secret-2024';
+
+let selectedCollection = 'reportes';
+
+// ── Tabs ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['chat','pdf','admin','trans'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name === 'admin') refreshStatus();
+  if (name === 'pdf') loadMilvusStats();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Status check ──────────────────────────────────────────────────────
+async function checkStatus() {
+  // RAG
+  try {
+    const r = await fetch(`${RAG_API}/`);
+    const ok = r.ok;
+    document.getElementById('rag-dot').className = `status-dot ${ok?'ok':'err'}`;
+    document.getElementById('rag-status').textContent = ok ? 'RAG API online' : 'RAG API offline';
+  } catch { 
+    document.getElementById('rag-dot').className = 'status-dot err';
+    document.getElementById('rag-status').textContent = 'RAG API offline';
+  }
+  // Reports
+  try {
+    const r = await fetch(`${REP_API}/health`);
+    const ok = r.ok;
+    document.getElementById('rep-dot').className = `status-dot ${ok?'ok':'err'}`;
+    document.getElementById('rep-status').textContent = ok ? 'Reports API online' : 'Reports API offline';
+  } catch {
+    document.getElementById('rep-dot').className = 'status-dot err';
+    document.getElementById('rep-status').textContent = 'Reports API offline';
+  }
+}
+
+// ── Collection selector ───────────────────────────────────────────────
+function selectCol(btn) {
+  document.querySelectorAll('.option-btn[data-col]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCollection = btn.dataset.col;
+}
+
+function setQuestion(q) {
+  const input = document.getElementById('chat-input');
+  input.value = q;
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  input.focus();
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────
+function addMessage(role, text, context) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'user' ? 'TÚ' : 'TALOS RAG';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = text;
+
+  div.appendChild(label);
+  div.appendChild(bubble);
+
+  if (context && role === 'assistant') {
+    const ctx = document.createElement('div');
+    ctx.className = 'msg-context';
+    ctx.innerHTML = `<div class="msg-context-label">Contexto recuperado · click para expandir</div>${context}`;
+    ctx.onclick = () => ctx.classList.toggle('expanded');
+    div.appendChild(ctx);
+  }
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function addThinking() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'message assistant';
+  div.id = 'thinking-msg';
+
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = 'TALOS RAG';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'thinking';
+  bubble.innerHTML = '<span></span><span></span><span></span>';
+
+  div.appendChild(label);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  const topK = parseInt(document.getElementById('topk-slider').value);
+  const btn = document.getElementById('send-btn');
+
+  input.value = '';
+  input.style.height = 'auto';
+  btn.disabled = true;
+
+  addMessage('user', question);
+  addThinking();
+
+  const body = { question, top_k: topK };
+  if (selectedCollection !== 'ambas') body.collection = selectedCollection;
+
+  try {
+    const resp = await fetch(`${RAG_API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    document.getElementById('thinking-msg')?.remove();
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      addMessage('assistant', `Error: ${err.detail || 'Error desconocido'}`);
+    } else {
+      const data = await resp.json();
+      addMessage('assistant', data.answer, data.context_used);
+    }
+  } catch (e) {
+    document.getElementById('thinking-msg')?.remove();
+    addMessage('assistant', `Error de conexión: ${e.message}`);
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+
+// ── PDF Tab ───────────────────────────────────────────────────────────
+async function loadReport() {
+  const id = document.getElementById('pdf-inv-id').value;
+  if (!id) { toast('Ingresa un ID de inventario', 'error'); return; }
+
+  const statusBox = document.getElementById('report-status-box');
+  const statusVal = document.getElementById('report-status-val');
+  statusBox.style.display = 'block';
+
+  try {
+    const r = await fetch(`${REP_API}/reports/${id}/status`);
+    const data = await r.json();
+    statusVal.textContent = data.status;
+
+    if (data.status === 'ready') {
+      const viewer = document.getElementById('pdf-viewer');
+      viewer.innerHTML = `<iframe src="${REP_API}/reports/${id}/download" type="application/pdf"></iframe>`;
+      toast('Reporte cargado', 'success');
+    } else {
+      toast('El reporte aún no está listo. Genera uno primero.', 'info');
+    }
+  } catch (e) {
+    toast('Error al cargar el reporte', 'error');
+  }
+}
+
+async function downloadReport() {
+  const id = document.getElementById('pdf-inv-id').value;
+  if (!id) { toast('Ingresa un ID', 'error'); return; }
+  window.open(`${REP_API}/reports/${id}/download`, '_blank');
+}
+
+async function generateReport() {
+  const id = document.getElementById('pdf-inv-id').value;
+  if (!id) { toast('Ingresa un ID', 'error'); return; }
+
+  try {
+    const r = await fetch(`${REP_API}/reports/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idinventariomes: parseInt(id) })
+    });
+    const data = await r.json();
+    toast(`Generando reporte ${id}... Estado: ${data.status}`, 'info');
+  } catch (e) {
+    toast('Error al generar reporte', 'error');
+  }
+}
+
+async function loadMilvusStats() {
+  try {
+    const r = await fetch(`${RAG_API}/status`);
+    const data = await r.json();
+    document.getElementById('stat-inv').textContent = (data.inventario || 0).toLocaleString() + ' docs';
+    document.getElementById('stat-rep').textContent = (data.reportes || 0).toLocaleString() + ' docs';
+  } catch {}
+}
+
+// ── Admin Tab ─────────────────────────────────────────────────────────
+async function refreshStatus() {
+  try {
+    const r = await fetch(`${RAG_API}/`);
+    document.getElementById('admin-rag').textContent = r.ok ? 'online' : 'error';
+  } catch { document.getElementById('admin-rag').textContent = 'offline'; }
+
+  try {
+    const r = await fetch(`${REP_API}/health`);
+    const d = await r.json();
+    document.getElementById('admin-rep').textContent = d.status === 'ok' ? 'online' : 'degradado';
+  } catch { document.getElementById('admin-rep').textContent = 'offline'; }
+
+  try {
+    const r = await fetch(`${RAG_API}/status`);
+    const d = await r.json();
+    document.getElementById('admin-inv-docs').textContent = (d.inventario||0).toLocaleString();
+    document.getElementById('admin-rep-docs').textContent = (d.reportes||0).toLocaleString();
+  } catch {}
+}
+
+async function reindexDB() {
+  const days = document.getElementById('admin-days').value;
+  const limit = document.getElementById('admin-limit').value;
+  const result = document.getElementById('admin-db-result');
+  result.innerHTML = '<span class="spinner"></span>Reindexando...';
+
+  try {
+    const r = await fetch(`${RAG_API}/index/db`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+      body: JSON.stringify({ days: parseInt(days), limit: parseInt(limit) })
+    });
+    const d = await r.json();
+    result.textContent = `${d.indexed || d.indexados || 0} registros indexados`;
+    toast('DB reindexada correctamente', 'success');
+  } catch (e) {
+    result.textContent = `Error: ${e.message}`;
+    toast('Error al reindexar DB', 'error');
+  }
+}
+
+async function reindexPDF() {
+  const path = document.getElementById('admin-pdf-path').value.trim();
+  const result = document.getElementById('admin-pdf-result');
+  if (!path) { toast('Ingresa la ruta del PDF', 'error'); return; }
+  result.innerHTML = '<span class="spinner"></span>Procesando PDF...';
+
+  try {
+    const r = await fetch(`${RAG_API}/index/pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+      body: JSON.stringify({ pdf_path: path })
+    });
+    const d = await r.json();
+    result.textContent = `${d.indexed || 0} fragmentos indexados`;
+    toast('PDF reindexado correctamente', 'success');
+  } catch (e) {
+    result.textContent = `Error: ${e.message}`;
+    toast('Error al reindexar PDF', 'error');
+  }
+}
+
+async function adminGenerateReport() {
+  const id = document.getElementById('admin-gen-id').value;
+  const result = document.getElementById('admin-gen-result');
+  if (!id) { toast('Ingresa un ID', 'error'); return; }
+  result.innerHTML = '<span class="spinner"></span>Enviando...';
+
+  try {
+    const r = await fetch(`${REP_API}/reports/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idinventariomes: parseInt(id) })
+    });
+    const d = await r.json();
+    result.textContent = `Estado: ${d.status}`;
+    toast('Reporte en proceso', 'info');
+  } catch (e) {
+    result.textContent = `Error: ${e.message}`;
+  }
+}
+
+// ── Transferencias Tab ────────────────────────────────────────────────
+function badgeEstatus(e) {
+  const map = { confirmada: 'badge-green', pendiente: 'badge-yellow', rechazada: 'badge-red' };
+  return `<span class="badge ${map[e]||'badge-blue'}">${e}</span>`;
+}
+
+async function loadTransferencias() {
+  const id = document.getElementById('trans-inv-id').value;
+  if (!id) { toast('Ingresa un ID', 'error'); return; }
+
+  const tbody = document.getElementById('trans-tbody');
+  tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><span class="spinner"></span>Cargando...</td></tr>';
+
+  try {
+    const r = await fetch(`${REP_API}/transferencias/inventario/${id}`);
+    const data = await r.json();
+
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No hay transferencias para este inventario</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(t => `
+      <tr>
+        <td style="font-family:var(--mono);color:var(--text3)">#${t.idtransferencia}</td>
+        <td>${t.producto_nombre || t.idproducto}</td>
+        <td style="font-size:11px;color:var(--text2)">
+          ${t.almacen_origen_nombre||t.idalmacen_origen} / ${t.almacen_destino_nombre||t.idalmacen_destino}
+        </td>
+        <td style="font-family:var(--mono)">${parseFloat(t.transferencia_cantidad).toFixed(3)}</td>
+        <td style="font-family:var(--mono)">${t.transferencia_importe ? '$'+parseFloat(t.transferencia_importe).toLocaleString('es-MX',{minimumFractionDigits:2}) : '—'}</td>
+        <td><span class="badge badge-blue">${t.transferencia_tipo}</span></td>
+        <td>${badgeEstatus(t.transferencia_estatus)}</td>
+        <td style="color:var(--text3)">—</td>
+        <td>
+          ${t.transferencia_estatus === 'pendiente' ? `
+            <button class="btn btn-green" style="padding:5px 10px;font-size:10px" onclick="confirmarT(${t.idtransferencia})">Aceptar</button>
+            <button class="btn btn-red" style="padding:5px 10px;font-size:10px;margin-left:4px" onclick="rechazarT(${t.idtransferencia})">Rechazar</button>
+          ` : '—'}
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function confirmarT(id) {
+  try {
+    const r = await fetch(`${REP_API}/transferencias/${id}/confirmar`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    if (r.ok) { toast('Transferencia confirmada', 'success'); loadTransferencias(); }
+    else toast('Error al confirmar', 'error');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function rechazarT(id) {
+  try {
+    const r = await fetch(`${REP_API}/transferencias/${id}/rechazar`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    if (r.ok) { toast('Transferencia rechazada', 'info'); loadTransferencias(); }
+    else toast('Error al rechazar', 'error');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+async function detectarTransferencias() {
+  const suc = document.getElementById('detect-suc-id').value;
+  const emp = document.getElementById('detect-emp-id').value;
+  if (!suc || !emp) { toast('Ingresa sucursal y empresa', 'error'); return; }
+
+  toast('Detectando transferencias...', 'info');
+
+  try {
+    const r = await fetch(`${REP_API}/transferencias/detectar/${suc}?idempresa=${emp}&guardar=true`, {
+      method: 'POST'
+    });
+    const data = await r.json();
+
+    const box = document.getElementById('detect-result');
+    const tbody = document.getElementById('detect-tbody');
+
+    if (!data.transferencias?.length) {
+      toast('No se detectaron transferencias automáticas', 'info');
+      box.style.display = 'none';
+      return;
+    }
+
+    box.style.display = 'block';
+    tbody.innerHTML = data.transferencias.map(t => `
+      <tr>
+        <td>${t.producto}</td>
+        <td style="color:var(--text3)">${t.categoria||'—'}</td>
+        <td>${t.almacen_origen}</td>
+        <td>${t.almacen_destino}</td>
+        <td style="font-family:var(--mono)">${t.cantidad}</td>
+        <td style="font-family:var(--mono)">$${parseFloat(t.importe).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+        <td><span class="badge ${parseFloat(t.confianza)>=80?'badge-green':'badge-yellow'}">${t.confianza}</span></td>
+      </tr>
+    `).join('');
+
+    toast(`${data.total_detectadas} transferencias detectadas, ${data.nuevas_guardadas} guardadas`, 'success');
+    loadTransferencias();
+  } catch (e) {
+    toast(`Error: ${e.message}`, 'error');
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+checkStatus();
+setInterval(checkStatus, 30000);
+</script>
+</body>
+</html>

@@ -1039,7 +1039,7 @@ class PipelineBGEM3Completo:
 
     def procesar_numeros(
         self,
-        numeros: list[NumeroEmpresarial]
+        numeros: list
     ) -> tuple[list[str], np.ndarray, pd.DataFrame]:
         """
         Procesa un lote de números empresariales.

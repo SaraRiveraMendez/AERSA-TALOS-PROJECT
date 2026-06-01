@@ -11,7 +11,7 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODELO_LLM = "llama3.2:3b"
 MODELO_EMBEDDING = "BAAI/bge-m3"
 
-MILVUS_PATH = "/home/rene_abraham_calzadilla_calderon/talos-server/milvus_talos.db"
+MILVUS_PATH = "/home/rene_abraham_calzadilla_calderon/AERSA-TALOS-PROJECT/talos-server/milvus_talos.db"
 COLECCION_DB = "inventario"
 COLECCION_PDF = "reportes"
 

@@ -3,9 +3,9 @@
 # Re-indexes MySQL data every week.
 # Add to crontab: 0 2 * * 0 /bin/bash /home/rene_abraham_calzadilla_calderon/talos-server/cron/cron_db.sh
 
-VENV="/home/rene_abraham_calzadilla_calderon/talos-server/rag/.rag_env/bin/activate"
-SCRIPT="/home/rene_abraham_calzadilla_calderon/talos-server/indexers/indexar_db.py"
-LOG="/home/rene_abraham_calzadilla_calderon/talos-server/logs/cron_db.log"
+VENV="/home/rene_abraham_calzadilla_calderon/AERSA-TALOS-PROJECT/talos-server/rag/.rag_env/bin/activate"
+SCRIPT="/home/rene_abraham_calzadilla_calderon/AERSA-TALOS-PROJECT/talos-server/indexers/indexar_db.py"
+LOG="/home/rene_abraham_calzadilla_calderon/AERSA-TALOS-PROJECT/talos-server/logs/cron_db.log"
 
 mkdir -p "$(dirname "$LOG")"
 

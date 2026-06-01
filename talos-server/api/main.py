@@ -93,7 +93,7 @@ ANSWER:"""
         "model": MODELO_LLM,
         "prompt": prompt,
         "stream": False
-    }, timeout=120)
+    }, timeout=300)
 
     if resp.status_code != 200:
         raise HTTPException(500, "Error contacting Ollama")
@@ -119,33 +119,39 @@ def status():
 
 @app.post("/ask")
 def ask(req: AskRequest):
-    """Retrieves relevant context and answers using Ollama."""
-    if not milvus.has_collection(req.collection):
-        raise HTTPException(
-            400,
-            f"Collection '{req.collection}' has no data. Run the indexer first."
-        )
-
     query_vec = embedder.encode(req.question, normalize_embeddings=True).tolist()
-    milvus.load_collection(req.collection) 
-    results = milvus.search(
-        collection_name=req.collection,
-        data=[query_vec],
-        limit=req.top_k,
-        output_fields=["texto"]
-    )
+    
+    # Determine which collections to search
+    if req.collection:
+        collections_to_search = [req.collection]
+    else:
+        collections_to_search = [COLECCION_DB, COLECCION_PDF]
+    
+    contexts = []
+    for collection in collections_to_search:
+        if not milvus.has_collection(collection):
+            continue
+        milvus.load_collection(collection)
+        results = milvus.search(
+            collection_name=collection,
+            data=[query_vec],
+            limit=req.top_k,
+            output_fields=["texto"]
+        )
+        if results and results[0]:
+            contexts.extend([r["entity"]["texto"] for r in results[0]])
 
-    if not results or not results[0]:
+    if not contexts:
         raise HTTPException(404, "No relevant results found")
 
-    context = "\n".join([r["entity"]["texto"] for r in results[0]])
+    context = "\n".join(contexts)
     answer = ask_ollama(context, req.question)
 
     return {
         "question": req.question,
         "answer": answer,
         "context_used": context,
-        "collection": req.collection
+        "collections": collections_to_search
     }
 
 # ── Protected endpoints (require API key) ──────────────────

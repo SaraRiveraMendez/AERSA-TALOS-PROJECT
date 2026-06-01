@@ -1,8 +1,30 @@
+# ── Data & ML ─────────────────────────────────────────────
 pandas>=2.0
 numpy>=1.24
-PyPDF2>=3.0
-camelot-py>=0.10.1
-pdfplumber>=0.10.1
-sentence-transformers>=2.2.2
 torch>=2.0
+sentence-transformers>=2.2.2
+
+# ── Database ───────────────────────────────────────────────
 mysql-connector-python>=8.0
+
+# ── Vector DB ─────────────────────────────────────────────
+pymilvus>=2.4.0
+milvus-lite>=2.4.0
+
+# ── API ───────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn>=0.29.0
+
+# ── PDF processing ────────────────────────────────────────
+PyPDF2>=3.0
+pdfplumber>=0.10.1
+camelot-py>=0.10.1
+
+# ── Report generation ─────────────────────────────────────
+jinja2>=3.1.0
+matplotlib>=3.7.0
+playwright>=1.40.0
+
+# ── Utilities ─────────────────────────────────────────────
+requests>=2.31.0
+python-dotenv>=1.0.0

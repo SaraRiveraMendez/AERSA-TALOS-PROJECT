@@ -17,3 +17,4 @@ COLECCION_PDF = "reportes"
 
 # API key for protected endpoints
 API_KEY = "talos-secret-2026"
+COLECCION_CONOCIMIENTO = 'conocimiento'

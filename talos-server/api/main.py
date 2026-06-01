@@ -21,7 +21,7 @@ from sentence_transformers import SentenceTransformer
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config import (
-    API_KEY, COLECCION_DB, COLECCION_PDF,
+    API_KEY, COLECCION_DB, COLECCION_PDF, COLECCION_CONOCIMIENTO,
     MODELO_EMBEDDING, MILVUS_PATH, MODELO_LLM, OLLAMA_URL,
 )
 from indexers.indexar_db import indexar as _indexar_db
@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 
 app = FastAPI(title="TALOS RAG API", version="2.0")
 
-# ── CORS (allows the frontend to call the API) ─────────────
+# ── CORS ───────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,15 +48,15 @@ def require_api_key(key: str = Security(api_key_header)):
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
     return key
 
-# ── Global state (models loaded once at startup) ───────────
+# ── Global state ───────────────────────────────────────────
 embedder: SentenceTransformer = None
 milvus: MilvusClient = None
 
 # ── Request models ─────────────────────────────────────────
 class AskRequest(BaseModel):
     question: str
-    top_k: Optional[int] = 5
-    collection: Optional[str] = "inventario"  # "inventario" or "reportes"
+    top_k: Optional[int] = 3
+    collection: Optional[str] = None
 
 class IndexDBRequest(BaseModel):
     days: Optional[int] = 90
@@ -77,8 +77,10 @@ async def startup():
 
 # ── Helper: call Ollama ────────────────────────────────────
 def ask_ollama(context: str, question: str) -> str:
-    prompt = f"""You are an expert assistant in inventory auditing for the TALOS system.
-Use the following real data context to answer the user's question.
+    prompt = f"""You are an expert assistant in inventory auditing for the TALOS system, specialized in restaurants and bars.
+You have access to real inventory data, audit reports, and professional auditing best practices.
+Use ALL the provided context to give precise and actionable answers.
+When the context includes auditing rules or thresholds, apply them explicitly to the data.
 Always respond in Spanish, concisely and helpfully.
 If the context is not sufficient to answer, say so clearly.
 
@@ -107,9 +109,8 @@ def root():
 
 @app.get("/status")
 def status():
-    """Returns how many documents are indexed in each collection."""
     result = {}
-    for collection in [COLECCION_DB, COLECCION_PDF]:
+    for collection in [COLECCION_DB, COLECCION_PDF, COLECCION_CONOCIMIENTO]:
         if milvus.has_collection(collection):
             stats = milvus.get_collection_stats(collection)
             result[collection] = stats["row_count"]
@@ -120,13 +121,16 @@ def status():
 @app.post("/ask")
 def ask(req: AskRequest):
     query_vec = embedder.encode(req.question, normalize_embeddings=True).tolist()
-    
-    # Determine which collections to search
+
+    # Determine which data collections to search
     if req.collection:
-        collections_to_search = [req.collection]
+        data_collections = [req.collection]
     else:
-        collections_to_search = [COLECCION_DB, COLECCION_PDF]
-    
+        data_collections = [COLECCION_DB, COLECCION_PDF]
+
+    # Always include the knowledge base
+    collections_to_search = data_collections + [COLECCION_CONOCIMIENTO]
+
     contexts = []
     for collection in collections_to_search:
         if not milvus.has_collection(collection):
@@ -154,7 +158,7 @@ def ask(req: AskRequest):
         "collections": collections_to_search
     }
 
-# ── Protected endpoints (require API key) ──────────────────
+# ── Protected endpoints ────────────────────────────────────
 @app.post("/index/db")
 def index_db(req: IndexDBRequest, _: str = Security(require_api_key)):
     """Indexes data from MySQL. Requires X-API-Key header."""

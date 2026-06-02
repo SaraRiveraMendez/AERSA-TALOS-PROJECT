@@ -26,7 +26,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-
 # ── Constantes ────────────────────────────────────────────────────────────────
 
 UMBRAL_ALTO_PCT: float = 150.0  # % sobre la media para alertas de prioridad alta
@@ -102,9 +101,11 @@ class DataProcessor:
         header: dict,
         detalle: list[dict],
         pendientes_validacion: list[dict] | None = None,
+        transferencias: list[dict] | None = None,
     ) -> None:
         self.header = header
         self.pendientes = pendientes_validacion or []
+        self.transferencias = transferencias or []
 
         # DataFrame principal — toda la magia estadística sucede aquí
         self.df = self._build_dataframe(detalle)
@@ -168,6 +169,7 @@ class DataProcessor:
         ctx.update(self._ctx_rankings())
         ctx.update(self._ctx_aclaraciones())
         ctx.update(self._ctx_validacion_catalogo())
+        ctx.update(self._ctx_transferencias())
         ctx.update(self._ctx_conclusiones(ctx))
 
         # DataFrame de detalle por categoría (para las tablas del reporte)
@@ -456,6 +458,7 @@ class DataProcessor:
         """Analiza el estado de las aclaraciones registradas."""
         df = self.df
         col_ac = "inventariomesdetalle_aclaracion"
+        col_cat = "inventariomesdetalle_categoria_aclaracion"  # nombre real en BD
         col_dif = "inventariomesdetalle_diferencia"
 
         tiene_dif = df[col_dif] != 0
@@ -586,25 +589,31 @@ class DataProcessor:
                 ]
                 .to_dict("records")
             ),
-            # Donut revisados vs pendientes
-            "donut_revision": {
-                "revisados": int(
-                    df.get(
-                        "inventariomesdetalle_revisada", pd.Series(0, index=df.index)
-                    ).sum()
-                ),
-                "pendientes": int(
-                    (
-                        df.get(
-                            "inventariomesdetalle_revisada",
-                            pd.Series(0, index=df.index),
-                        )
-                        == 0
-                    ).sum()
-                ),
-            },
+            # Barras agrupadas faltantes/sobrantes por categoría
+            "barras_categoria": self._build_barras_categoria(),
             # Heatmap tipo_movimiento × categoría
             "heatmap_movimientos": self._build_heatmap_data(),
+        }
+
+    def _build_barras_categoria(self) -> dict:
+        """Datos para barras agrupadas de faltantes/sobrantes por categoría."""
+        df = self.df
+        categorias = [CAT_ALIMENTOS, CAT_BEBIDAS, CAT_MISC]
+        faltantes = []
+        sobrantes = []
+        for cat in categorias:
+            sub = df[df["categoria_nombre"] == cat]
+            if sub.empty:
+                faltantes.append(0.0)
+                sobrantes.append(0.0)
+            else:
+                imp = sub["inventariomesdetalle_difimporte"]
+                faltantes.append(abs(float(imp[imp < 0].sum())))
+                sobrantes.append(float(imp[imp > 0].sum()))
+        return {
+            "categorias": categorias,
+            "faltantes": faltantes,
+            "sobrantes": sobrantes,
         }
 
     def _build_heatmap_data(self) -> dict:
@@ -641,4 +650,87 @@ class DataProcessor:
             "categorias": categorias,
             "movimientos": [r["tipo"] for r in matrix],
             "matrix": [list(r["valores"].values()) for r in matrix],
+        }
+
+    # ── Transferencias confirmadas ────────────────────────────────────────────
+
+    def _ctx_transferencias(self) -> dict:
+        """
+        Calcula faltantes ajustados descontando transferencias confirmadas.
+
+        Lógica:
+        - Faltante bruto: lo que reporta el inventario (puede incluir transferencias)
+        - Transferencias confirmadas: movimientos validados por el auditor
+        - Faltante ajustado = faltante bruto - importe de transferencias confirmadas
+        - Pérdida real = faltante ajustado (lo que quedó sin explicación)
+        """
+        if not self.transferencias:
+            return {
+                "transferencias": [],
+                "count_transferencias": 0,
+                "importe_transferencias": "0.00",
+                "faltante_bruto": _fmt(
+                    abs(float(self.header.get("inventariomes_faltantes", 0) or 0))
+                ),
+                "faltante_ajustado": _fmt(
+                    abs(float(self.header.get("inventariomes_faltantes", 0) or 0))
+                ),
+                "perdida_real": _fmt(
+                    abs(float(self.header.get("inventariomes_faltantes", 0) or 0))
+                ),
+                "pct_faltante_explicado": "0.00",
+                "transferencias_internas": [],
+                "transferencias_entre_suc": [],
+            }
+
+        faltante_bruto = abs(float(self.header.get("inventariomes_faltantes", 0) or 0))
+
+        # Sumar importes de transferencias donde este almacén es el origen
+        idalmacen = self.header.get("idalmacen")
+        importe_transferido = 0.0
+
+        internas: list[dict] = []
+        entre_suc: list[dict] = []
+
+        for t in self.transferencias:
+            imp = float(t.get("transferencia_importe") or 0)
+            # Solo contar como "explicado" si este almacén fue el origen del faltante
+            if t.get("idalmacen_origen") == idalmacen:
+                importe_transferido += imp
+
+            # Clasificar para el reporte
+            row = {
+                "producto_nombre": t.get("producto_nombre", ""),
+                "categoria_nombre": t.get("categoria_nombre", ""),
+                "almacen_origen_nombre": t.get("almacen_origen_nombre", ""),
+                "almacen_destino_nombre": t.get("almacen_destino_nombre", ""),
+                "transferencia_cantidad": _fmt(
+                    float(t.get("transferencia_cantidad") or 0), 3
+                ),
+                "transferencia_importe": _fmt(imp),
+                "transferencia_origen": t.get("transferencia_origen", ""),
+                "transferencia_observaciones": t.get("transferencia_observaciones", ""),
+            }
+
+            if t.get("transferencia_tipo") == "interna":
+                internas.append(row)
+            else:
+                entre_suc.append(row)
+
+        faltante_ajustado = max(0.0, faltante_bruto - importe_transferido)
+        perdida_real = faltante_ajustado
+        pct_explicado = (
+            _pct(importe_transferido, faltante_bruto) if faltante_bruto else "0.00"
+        )
+
+        return {
+            "transferencias": internas + entre_suc,
+            "count_transferencias": len(self.transferencias),
+            "importe_transferencias": _fmt(importe_transferido),
+            "faltante_bruto": _fmt(faltante_bruto),
+            "faltante_ajustado": _fmt(faltante_ajustado),
+            "perdida_real": _fmt(perdida_real),
+            "pct_faltante_explicado": pct_explicado,
+            "transferencias_internas": internas,
+            "transferencias_entre_suc": entre_suc,
         }

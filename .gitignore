@@ -12,6 +12,10 @@ __pycache__/
 .env
 venv/
 .venv/
+storage/
+sql/
+__pycache__/
+*.py[cod]
 
 *.log
 

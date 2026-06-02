@@ -18,12 +18,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.connection import get_db
 from app.db.queries import fetch_header, fetch_detalle
+from app.db.transferencia_queries import fetch_transferencias_confirmadas
 from app.models import GenerateReportRequest, ReportStatusResponse
 from app.services.data_processor import DataProcessor
 from app.services.chart_generator import generate_all_charts
 from app.services.html_generator import render_report_html
-
-# from app.services.pdf_generator import run_pdf_sync
+from app.services.pdf_generator import run_pdf_async
 from app.config import get_settings
 
 router = APIRouter(prefix="/reports", tags=["Reportes"])
@@ -108,11 +108,15 @@ async def _run_report_pipeline(
         async with get_db_context() as db:
             header = await fetch_header(db, idinventariomes)
             detalle = await fetch_detalle(db, idinventariomes)
+            transferencias = await fetch_transferencias_confirmadas(db, idinventariomes)
 
-        print(f"[Pipeline] {len(detalle)} productos cargados.")
+        print(
+            f"[Pipeline] {len(detalle)} productos cargados, "
+            f"{len(transferencias)} transferencias confirmadas."
+        )
 
         # 2. Procesar KPIs y estadísticos
-        processor = DataProcessor(header, detalle)
+        processor = DataProcessor(header, detalle, transferencias=transferencias)
         context = processor.build_context()
         chart_data = processor.get_chart_data()
 
@@ -137,8 +141,6 @@ async def _run_report_pipeline(
 
         # 5. PDF con Playwright en thread separado
         pdf_path = _get_pdf_path(idinventariomes)
-        from app.services.pdf_generator import run_pdf_async
-
         await run_pdf_async(html_content, pdf_path)
 
         print(f"[Pipeline] ✓ Reporte {idinventariomes} listo → {pdf_path}")

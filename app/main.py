@@ -23,7 +23,7 @@ from app.config import get_settings
 from app.db.connection import check_db_connection, dispose_engine
 from app.models import HealthResponse
 from app.routers import reports
-
+from app.routers import reports, transferencias
 
 settings = get_settings()
 
@@ -135,6 +135,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(reports.router)
+app.include_router(transferencias.router)
 
 
 # ── Endpoints base ────────────────────────────────────────────────────────────

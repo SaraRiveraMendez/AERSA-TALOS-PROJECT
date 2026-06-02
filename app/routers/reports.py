@@ -104,6 +104,16 @@ async def _run_report_pipeline(
     print(f"[Pipeline] Iniciando reporte {idinventariomes}...")
 
     try:
+        # Borrar versiones anteriores para garantizar datos frescos
+        pdf_path = _get_pdf_path(idinventariomes)
+        html_path = (
+            Path(settings.storage_local_path) / f"reporte_{idinventariomes}.html"
+        )
+        if pdf_path.exists():
+            pdf_path.unlink()
+        if html_path.exists():
+            html_path.unlink()
+
         # 1. Datos de la BD
         async with get_db_context() as db:
             header = await fetch_header(db, idinventariomes)
@@ -131,8 +141,6 @@ async def _run_report_pipeline(
 
         # 4. HTML con Jinja2
         html_content = render_report_html(context, charts)
-
-        # Debug: guardar HTML para inspección en el navegador
         html_path = (
             Path(settings.storage_local_path) / f"reporte_{idinventariomes}.html"
         )

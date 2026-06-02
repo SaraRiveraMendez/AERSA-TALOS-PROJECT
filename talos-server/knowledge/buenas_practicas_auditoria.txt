@@ -1,0 +1,180 @@
+# BUENAS PRÁCTICAS DE AUDITORÍA DE INVENTARIO — SISTEMA TALOS
+# Base de conocimiento para auditoría de restaurantes y bares
+# Versión 1.0 — Sistema TALOS
+
+---
+
+## 1. UMBRALES DE ALERTA Y TOLERANCIA
+
+### Faltantes
+- **Crítico (acción inmediata):** faltante > 10% del valor total del inventario físico del almacén, o cualquier producto con importe de faltante > $1,000.
+- **Alto (investigar en 48h):** faltante entre 5% y 10% del total, o productos con importe entre $500 y $1,000.
+- **Medio (revisar en semana):** faltante entre 2% y 5%, o productos con importe entre $100 y $500.
+- **Bajo (monitorear):** faltante < 2% o importe < $100. Puede ser error de conteo o merma normal.
+
+### Sobrantes
+Los sobrantes son tan sospechosos como los faltantes. Un sobrante puede indicar:
+- Producto recibido pero no registrado en el sistema.
+- Transferencia de otro almacén no documentada.
+- Error en el conteo físico (por ejemplo, contar botellas parcialmente usadas como llenas).
+- Devolución de cliente no registrada.
+- **Umbral de alerta para sobrantes:** mismo criterio que faltantes. Un sobrante > $500 requiere investigación.
+
+### Diferencia neta aceptable
+- En bares y restaurantes, una diferencia neta (faltantes - sobrantes) de ±3% del inventario total se considera normal por merma, evaporación y errores de conteo.
+- Diferencias netas superiores al 5% indican problemas sistémicos en el proceso de conteo o registro.
+
+---
+
+## 2. INTERPRETACIÓN ESTADÍSTICA
+
+### Z-score en auditoría de inventario
+- El z-score mide cuántas desviaciones estándar se aleja un valor de la media del inventario.
+- **z ≥ 2σ:** valor atípico moderado — investigar causa.
+- **z ≥ 3σ:** valor atípico significativo — probable error o irregularidad.
+- **z ≥ 4σ:** valor extremo — alta probabilidad de error de sistema, fraude o robo.
+- **z ≥ 5σ:** valor excepcional — investigación obligatoria e inmediata.
+- Un z-score alto en sobrantes (como 5.09σ en VINO TINTO CALIFORNIA) puede indicar una transferencia no registrada desde otro almacén, una recepción de mercancía no ingresada al sistema, o un error grave en el conteo físico.
+- Un z-score alto en faltantes (como 4.63σ en CAPSULA CAFE ESPRESSO) puede indicar robo hormiga acumulado, merma no reportada, o producto vendido fuera del sistema (venta sin registro).
+
+### Concentración de faltantes (Regla 80/20)
+- En la mayoría de inventarios de restaurante, el 80% del importe de faltantes se concentra en el 20% de los productos.
+- Si los 3 primeros productos del ranking concentran más del 40% del importe total de faltantes, hay un problema focalizado que debe resolverse antes del siguiente cierre.
+- Priorizar siempre por importe de faltante, no por unidades.
+
+---
+
+## 3. PATRONES DE RIESGO EN BARES Y RESTAURANTES
+
+### Bebidas alcohólicas de alto valor
+- Productos como whiskies premium, vinos de alta gama y licores importados son los más susceptibles a robo hormiga.
+- Un faltante recurrente en el mismo producto en cierres consecutivos es señal de alerta mayor que un faltante aislado de mayor importe.
+- Botellas parcialmente consumidas deben estandarizarse en el conteo (ejemplo: botella al 50% = 0.5 unidades).
+
+### Productos de alta rotación
+- Cervezas, refrescos y productos de alta rotación tienen mayor tolerancia a pequeñas diferencias por merma física (roturas, derrames).
+- Diferencias de 1-3 unidades en productos de alta rotación son normales.
+- Diferencias de más de 10 unidades en cualquier producto de alta rotación requieren revisión.
+
+### Insumos de cocina perecederos
+- Frutas, verduras y proteínas tienen merma natural por caducidad y preparación.
+- Un faltante en productos perecederos no necesariamente indica irregularidad — verificar registros de merma.
+- Si no hay registro de merma y hay faltante en perecederos, investigar proceso de recepción.
+
+### Concentrados y jarabes
+- Los concentrados (naranja, fresa, mango) tienen alta merma por uso en preparación de bebidas.
+- Un faltante en concentrados debe cruzarse con el volumen de ventas del período para determinar si es consistente con el consumo esperado.
+
+---
+
+## 4. TRANSFERENCIAS ENTRE ALMACENES
+
+### Identificación del patrón de transferencia
+- Cuando el mismo producto tiene faltante en almacén A y sobrante en almacén B del mismo cierre, es muy probable que sea una transferencia física no registrada.
+- El umbral de tolerancia para considerar una transferencia es que las cantidades coincidan dentro del 15%.
+- Las transferencias internas (mismo restaurante, diferente almacén) son más comunes que las transferencias entre sucursales.
+
+### Impacto en el reporte
+- Una transferencia confirmada reduce el faltante bruto: **pérdida real = faltante bruto - transferencias confirmadas**.
+- No confirmar transferencias infla artificialmente las pérdidas reportadas y genera alertas falsas.
+- El auditor debe revisar las transferencias detectadas automáticamente antes de cerrar el análisis.
+
+### Cuándo sospechar fraude vs error en transferencias
+- **Error:** transferencia entre almacenes del mismo restaurante, cantidades que coinciden exactamente, el encargado recuerda el movimiento.
+- **Fraude:** transferencia entre sucursales distintas, cantidades que no cuadran, el encargado no recuerda el movimiento, patrón recurrente.
+
+---
+
+## 5. TASA DE REVISIÓN Y ACLARACIONES
+
+### Tasa de revisión 0%
+- Una tasa de revisión del 0% significa que ningún producto fue marcado como revisado durante el conteo físico.
+- Esto puede indicar que el proceso de conteo no se siguió correctamente, o que el encargado no utiliza la función de revisión del sistema.
+- No es necesariamente una irregularidad, pero sí reduce la confiabilidad del inventario.
+- Se recomienda establecer como política que al menos los 20 productos de mayor valor sean marcados como revisados.
+
+### Aclaraciones pendientes
+- Las diferencias sin aclaración registrada son las más riesgosas desde el punto de vista de auditoría.
+- El auditor debe priorizar solicitar aclaración en productos con importe de diferencia > $200.
+- Una aclaración válida reduce el riesgo de la diferencia pero no la elimina del reporte.
+
+---
+
+## 6. PROCESO DE CIERRE SEMANAL RECOMENDADO
+
+### Antes del conteo físico
+1. Imprimir o consultar el listado de productos del almacén ordenado por categoría.
+2. Verificar que todos los movimientos del período estén registrados (compras, ventas, requisiciones).
+3. Asignar un auditor independiente al encargado del almacén para el conteo.
+
+### Durante el conteo
+1. Contar físicamente cada producto y registrar en el sistema.
+2. Marcar como "revisado" cada producto contado.
+3. Para bebidas alcohólicas: registrar botellas parciales con precisión decimal.
+4. Fotografiar discrepancias grandes (faltante > 5 unidades o > $500).
+
+### Después del conteo
+1. Revisar el reporte generado automáticamente.
+2. Analizar los outliers (z-score ≥ 2σ) antes de cerrar.
+3. Detectar y confirmar o rechazar transferencias entre almacenes.
+4. Registrar aclaraciones para diferencias > $200.
+5. Comparar con el cierre anterior para identificar patrones recurrentes.
+
+---
+
+## 7. INTERPRETACIÓN DEL BALANCE NETO
+
+### Balance neto positivo
+- Balance neto positivo (sobrantes > faltantes) no significa necesariamente que el inventario esté bien.
+- Puede indicar productos recibidos sin registrar, errores sistemáticos en el conteo, o transferencias no documentadas que inflan el stock físico.
+- Un balance neto positivo con muchos productos en sobrante y muchos en faltante indica un problema de proceso, no un buen resultado.
+
+### Balance neto negativo
+- Balance neto negativo (faltantes > sobrantes) es la situación más común y más preocupante.
+- Representa pérdida económica real para el negocio.
+- Debe analizarse en contexto: un balance neto de -$500 en un inventario de $100,000 (0.5%) es aceptable; el mismo importe en un inventario de $5,000 (10%) es crítico.
+
+### Exactitud del inventario
+- **Excelente:** > 90% de productos exactos (diferencia = 0).
+- **Buena:** 70-90% de productos exactos.
+- **Regular:** 50-70% de productos exactos.
+- **Deficiente:** < 50% de productos exactos — revisar proceso de conteo completo.
+- En el sistema TALOS, la tasa de exactitud se calcula como: productos con diferencia = 0 / total de productos auditados.
+
+---
+
+## 8. INDICADORES CLAVE DE DESEMPEÑO (KPIs) DE AUDITORÍA
+
+- **Tasa de exactitud:** % de productos sin diferencia. Meta: > 75%.
+- **Índice de faltantes:** importe de faltantes / importe total de inventario físico. Meta: < 5%.
+- **Índice de sobrantes:** importe de sobrantes / importe total de inventario físico. Meta: < 5%.
+- **Tasa de aclaración:** % de diferencias con aclaración registrada. Meta: > 80% para diferencias > $200.
+- **Tasa de revisión:** % de productos marcados como revisados. Meta: > 60%.
+- **Tiempo de cierre:** días entre fecha del inventario físico y fecha de finalización del análisis. Meta: < 3 días.
+
+---
+
+## 9. SEÑALES DE ALERTA DE FRAUDE O ROBO
+
+Las siguientes combinaciones de indicadores deben escalarse inmediatamente a supervisión:
+- Faltante recurrente en el mismo producto en 3 o más cierres consecutivos.
+- Faltante > $1,000 en un solo producto sin aclaración.
+- Tasa de exactitud < 30% en un almacén que históricamente tenía > 70%.
+- Z-score > 5σ en un faltante sin transferencia que lo explique.
+- Sobrante significativo en almacén destino sin transferencia registrada desde almacén origen.
+- Diferencias que aumentan progresivamente cierre a cierre en el mismo almacén.
+
+---
+
+## 10. GLOSARIO DE TÉRMINOS
+
+- **Stock teórico:** cantidad que debería haber según los movimientos registrados en el sistema (compras + stock inicial - ventas - requisiciones ± reajustes).
+- **Stock físico:** cantidad real contada durante el inventario físico.
+- **Diferencia:** stock físico - stock teórico. Negativo = faltante. Positivo = sobrante.
+- **Importe de diferencia:** diferencia × costo promedio del producto.
+- **Costo promedio:** costo unitario del producto en el período auditado.
+- **Merma:** pérdida de producto por causas normales (caducidad, preparación, derrames). No es robo ni error.
+- **Reajuste:** corrección manual al stock teórico autorizada por el encargado o auditor.
+- **Transferencia:** movimiento físico de producto entre almacenes que debe registrarse en el sistema.
+- **Flag outlier:** producto con diferencia tan extrema que probablemente sea un error de captura o dato corrupto. Se excluye del análisis principal.
+- **Flag costo promedio cero:** producto sin costo registrado. No puede calcularse su importe de diferencia. Requiere actualización en catálogo.

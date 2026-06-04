@@ -71,11 +71,6 @@ Usuario / Navegador
    ├── reportes     — chunks de PDFs de auditoría
    └── conocimiento — buenas prácticas de auditoría
 ```
-
-Para diagramas detallados ver `/docs`:
-- `talos_architecture.drawio` — arquitectura general del servidor
-- `talos_rag_pipeline.drawio` — pipeline de vectorización y consulta RAG
-
 ---
 
 ## Stack tecnológico
@@ -506,7 +501,7 @@ Dashboard web en `frontend/index.html` con 4 módulos:
 
 ## Dockerización
 
-Ver `DOCKER_README.md` para la guía completa de dockerización.
+Aunque no se implementó la dockerización, esto se puede hacer usando`DOCKER_README.md` en este mismo repositorio para tener una guía completa de dockerización.
 
 ---
 

@@ -2,8 +2,6 @@
 
 Sistema de análisis y auditoría de inventario para restaurantes y bares, desarrollado como proyecto escolar en el Instituto Tecnológico y de Estudios Superiores de Monterrey (ITESM). Combina generación automática de reportes, detección de transferencias entre almacenes y un asistente conversacional basado en RAG (Retrieval-Augmented Generation) que responde preguntas en lenguaje natural sobre los datos de inventario.
 
-🌐 **Demo en vivo:** https://pejelagartopiloto.site
-
 ---
 
 ## Tabla de contenidos
